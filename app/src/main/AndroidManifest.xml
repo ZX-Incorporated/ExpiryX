@@ -16,6 +16,9 @@
         <!-- Main/home page -->
         <activity android:name=".MainActivity" />
 
+        <activity android:name=".ManualEntryActivity" />
+
+
         <!-- Login screen - first screen when app launches -->
         <activity
             android:name=".LoginActivity"
@@ -24,6 +27,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
     </application>
