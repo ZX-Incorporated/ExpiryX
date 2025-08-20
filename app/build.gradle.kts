@@ -41,14 +41,24 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity) // Changed this line
     implementation(libs.androidx.constraintlayout)
+
+    // Lifecycle ViewModel + LiveData
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
+
+    // RecyclerView diff util (if using ListAdapter)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // ✅ Room dependencies
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+
+
 
     // Testing
     testImplementation(libs.junit)

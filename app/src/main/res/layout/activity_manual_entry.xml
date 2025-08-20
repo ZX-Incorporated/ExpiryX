@@ -18,7 +18,6 @@
             android:textStyle="bold"
             android:paddingBottom="16dp"/>
 
-        <!-- Product Name -->
         <EditText
             android:id="@+id/editTextProductName"
             android:layout_width="match_parent"
@@ -27,18 +26,18 @@
             android:padding="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Expiration Date -->
+        <!-- Make it clickable, not keyboard-editable -->
         <EditText
             android:id="@+id/editTextExpirationDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Expiration Date (dd/mm/yyyy)"
+            android:hint="Expiration Date (dd/MM/yyyy)"
             android:padding="12dp"
-            android:inputType="date"
+            android:focusable="false"
+            android:clickable="true"
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Quantity -->
         <EditText
             android:id="@+id/editTextQuantity"
             android:layout_width="match_parent"
@@ -49,7 +48,6 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Reminder Period -->
         <EditText
             android:id="@+id/editTextReminder"
             android:layout_width="match_parent"
@@ -60,7 +58,6 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Weight -->
         <EditText
             android:id="@+id/editTextWeight"
             android:layout_width="match_parent"
@@ -70,7 +67,6 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Notes -->
         <EditText
             android:id="@+id/editTextNotes"
             android:layout_width="match_parent"
@@ -82,17 +78,16 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Upload Product Image -->
+        <!-- Repurposed as Save Product -->
         <Button
             android:id="@+id/buttonUploadImage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Upload Product Image"
+            android:text="Save Product"
             android:layout_marginTop="16dp"
             android:backgroundTint="@color/teal_200"
             android:textColor="@android:color/white"/>
 
-        <!-- Favorite Checkbox -->
         <CheckBox
             android:id="@+id/checkboxFavorite"
             android:layout_width="wrap_content"
@@ -100,7 +95,6 @@
             android:text="Mark as Favorite"
             android:layout_marginTop="12dp"/>
 
-        <!-- Cancel Button -->
         <Button
             android:id="@+id/buttonCancel"
             android:layout_width="match_parent"

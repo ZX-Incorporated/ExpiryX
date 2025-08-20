@@ -19,11 +19,9 @@ class LoginActivity : AppCompatActivity() {
         val signUpText = findViewById<Button>(R.id.buttonSignUp)
         val forgotPasswordText = findViewById<TextView>(R.id.textViewForgotPassword)
 
-        // Log In button logic
         btnLogin.setOnClickListener {
             val email = emailField.text.toString()
             val password = passwordField.text.toString()
-
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
@@ -33,12 +31,11 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        // Continue as guest button logic
         btnGuest.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
 
-
+        // Optional: add listeners for signUpText/forgotPasswordText later
     }
 }

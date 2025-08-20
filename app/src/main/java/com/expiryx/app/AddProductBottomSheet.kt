@@ -1,16 +1,13 @@
 package com.expiryx.app
 
 import android.content.Intent
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout   // <-- Needed for your XML layouts
-import android.widget.TextView       // <-- For Cancel button
+import android.widget.LinearLayout
+import android.widget.TextView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.expiryx.app.R
-
 
 class AddProductBottomSheet : BottomSheetDialogFragment() {
 
@@ -25,21 +22,13 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
         val optionManual = view.findViewById<LinearLayout>(R.id.optionManual)
         val optionCancel = view.findViewById<TextView>(R.id.optionCancel)
 
-        optionCamera.setOnClickListener {
-            dismiss() // Later: launch camera intent
-        }
-        optionUpload.setOnClickListener {
-            dismiss() // Later: open gallery/file picker
-        }
+        optionCamera.setOnClickListener { dismiss() /* TODO camera later */ }
+        optionUpload.setOnClickListener { dismiss() /* TODO picker later */ }
         optionManual.setOnClickListener {
-            dismiss()
-            val intent = Intent(requireContext(), ManualEntryActivity::class.java)
-            startActivity(intent)
-        }
-
-        optionCancel.setOnClickListener {
+            startActivity(Intent(requireContext(), ManualEntryActivity::class.java))
             dismiss()
         }
+        optionCancel.setOnClickListener { dismiss() }
 
         return view
     }

@@ -5,23 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    tools:context=".ActivityLogin">
+    tools:context=".LoginActivity">
 
-    <!-- Welcome Title -->
-
-    <!-- Email Input Field -->
-
-    <!-- Password Input Field -->
-
-    <!-- Forgot Password Link -->
-
-    <!-- Log In Button -->
-
-    <!-- Continue as Guest Button -->
-
-    <!-- Login with Google Button -->
-
-    <!-- Sign Up Button -->
     <Button
         android:id="@+id/buttonGoogle"
         style="?attr/materialButtonOutlinedStyle"
@@ -32,7 +17,6 @@
         android:text="Login with Google"
         android:textColor="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonGuest"
         app:strokeColor="@android:color/darker_gray" />
@@ -47,7 +31,6 @@
         android:text="Continue as guest"
         android:textColor="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonLogin"
         app:strokeColor="@android:color/darker_gray" />
@@ -62,7 +45,6 @@
         android:text="Log In"
         android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewForgotPassword" />
 
@@ -87,7 +69,6 @@
         android:inputType="textPassword"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextEmail" />
 
@@ -101,7 +82,6 @@
         android:inputType="textEmailAddress"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewWelcome" />
 
@@ -115,7 +95,6 @@
         android:textSize="34sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.464"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -130,7 +109,6 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

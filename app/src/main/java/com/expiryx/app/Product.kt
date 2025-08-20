@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class Product(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
-    val expirationDate: String,
+    val expirationDate: Long,
     val quantity: Int,
     val reminderDays: Int,
     val weight: String,
