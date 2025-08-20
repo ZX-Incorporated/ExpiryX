@@ -1,16 +1,20 @@
 package com.expiryx.app
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 
 @Dao
 interface ProductDao {
+
+    @Query("SELECT * FROM products ORDER BY expirationDate ASC")
+    fun getAllProducts(): LiveData<List<Product>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(product: Product)
 
-    @Query("SELECT * FROM products ORDER BY expirationDate ASC")
-    fun getAll(): LiveData<List<Product>>
+    @Update
+    suspend fun update(product: Product)
+
+    @Delete
+    suspend fun delete(product: Product)
 }

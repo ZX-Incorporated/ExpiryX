@@ -11,6 +11,17 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class AddProductBottomSheet : BottomSheetDialogFragment() {
 
+    companion object {
+        fun newInstance(product: Product): AddProductBottomSheet {
+            val fragment = AddProductBottomSheet()
+            val args = Bundle().apply {
+                putParcelable("product", product)
+            }
+            fragment.arguments = args
+            return fragment
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

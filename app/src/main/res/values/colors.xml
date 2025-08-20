@@ -10,4 +10,20 @@
     <!-- Add these two lines for the login screen -->
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+        <color name="red">#F44336</color>
+        <color name="orange">#FF9800</color>
+        <color name="yellow">#FFEB3B</color>
+        <color name="green">#4CAF50</color>
+        <color name="blue">#2196F3</color>
+        <color name="purple">#9C27B0</color>
+
+        <color name="pinkish_red_transparent_start">#33FF4081</color>
+        <color name="pinkish_red_transparent_center">#66FF4081</color>
+        <color name="pinkish_red_transparent_end">#00FF4081</color>
+
+        <color name="gradient_overlay_start">#33FF4081</color>
+        <color name="gradient_overlay_center">#66FF4081</color>
+
+
 </resources>

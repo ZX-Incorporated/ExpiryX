@@ -1,14 +1,25 @@
 package com.expiryx.app
 
-import androidx.lifecycle.*
-
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-class ProductViewModel(private val productDao: ProductDao) : ViewModel() {
-    val allProducts: LiveData<List<Product>> = productDao.getAll()
+class ProductViewModel(private val dao: ProductDao) : ViewModel() {
+
+    val allProducts: LiveData<List<Product>> = dao.getAllProducts()
 
     fun insert(product: Product) = viewModelScope.launch {
-        productDao.insert(product)
+        dao.insert(product)
+    }
+
+    fun update(product: Product) = viewModelScope.launch {
+        dao.update(product)
+    }
+
+    fun delete(product: Product) = viewModelScope.launch {
+        dao.delete(product)
     }
 }
 

@@ -13,6 +13,7 @@ class ManualEntryActivity : AppCompatActivity() {
 
     private var selectedExpiryMillis: Long? = null
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private var editingProduct: Product? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,24 +26,31 @@ class ManualEntryActivity : AppCompatActivity() {
         val weightField = findViewById<EditText>(R.id.editTextWeight)
         val notesField = findViewById<EditText>(R.id.editTextNotes)
         val favoriteCheck = findViewById<CheckBox>(R.id.checkboxFavorite)
-        val saveButton = findViewById<Button>(R.id.buttonUploadImage) // repurposed as Save
+        val saveButton = findViewById<Button>(R.id.buttonUploadImage) // reused as Save
         val cancelButton = findViewById<Button>(R.id.buttonCancel)
 
         saveButton.text = "Save Product"
 
-        // Open a DatePicker when tapping the expiration field
+        // ✅ Check if editing
+        editingProduct = intent.getParcelableExtra("product")
+        editingProduct?.let { product ->
+            nameField.setText(product.name)
+            expirationField.setText(dateFormat.format(Date(product.expirationDate)))
+            selectedExpiryMillis = product.expirationDate
+            quantityField.setText(product.quantity.toString())
+            reminderField.setText(product.reminderDays.toString())
+            weightField.setText(product.weight ?: "")
+            notesField.setText(product.notes ?: "")
+            favoriteCheck.isChecked = product.isFavorite
+        }
+
         expirationField.setOnClickListener {
             val cal = Calendar.getInstance()
             val dlg = DatePickerDialog(
                 this,
                 { _, y, m, d ->
                     val picked = Calendar.getInstance().apply {
-                        set(Calendar.YEAR, y)
-                        set(Calendar.MONTH, m)
-                        set(Calendar.DAY_OF_MONTH, d)
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
+                        set(y, m, d, 0, 0, 0)
                         set(Calendar.MILLISECOND, 0)
                     }
                     selectedExpiryMillis = picked.timeInMillis
@@ -62,18 +70,23 @@ class ManualEntryActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // If user typed a date manually, try to parse it
             val expiryMillis = selectedExpiryMillis ?: run {
                 val text = expirationField.text.toString().trim()
-                if (text.isNotEmpty()) {
-                    try { dateFormat.parse(text)?.time } catch (_: Exception) { null }
-                } else null
+                if (text.isNotEmpty()) dateFormat.parse(text)?.time else null
             } ?: run {
                 expirationField.error = "Pick an expiration date"
                 return@setOnClickListener
             }
 
-            val product = Product(
+            val product = editingProduct?.copy(
+                name = name,
+                expirationDate = expiryMillis,
+                quantity = quantityField.text.toString().toIntOrNull() ?: 1,
+                reminderDays = reminderField.text.toString().toIntOrNull() ?: 0,
+                weight = weightField.text.toString(),
+                notes = notesField.text.toString(),
+                isFavorite = favoriteCheck.isChecked
+            ) ?: Product(
                 name = name,
                 expirationDate = expiryMillis,
                 quantity = quantityField.text.toString().toIntOrNull() ?: 1,
@@ -85,7 +98,11 @@ class ManualEntryActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 val db = AppDatabase.getDatabase(this@ManualEntryActivity)
-                db.productDao().insert(product)
+                if (editingProduct != null) {
+                    db.productDao().update(product)
+                } else {
+                    db.productDao().insert(product)
+                }
                 finish()
             }
         }

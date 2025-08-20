@@ -10,17 +10,18 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
 
     companion object {
-        @Volatile private var instance: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
-            return instance ?: synchronized(this) {
-                val db = Room.databaseBuilder(
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "expiryx_db"
+                    "product_database"
                 ).build()
-                instance = db
-                db
+                INSTANCE = instance
+                instance
             }
         }
     }
