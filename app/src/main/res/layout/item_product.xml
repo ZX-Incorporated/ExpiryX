@@ -2,13 +2,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:background="@android:color/white"
+    android:layout_margin="8dp"
+    android:elevation="2dp">
 
     <TextView
         android:id="@+id/textProductName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Milk"
+        android:text="Product Name"
         android:textSize="18sp"
         android:textStyle="bold"/>
 
@@ -16,7 +19,7 @@
         android:id="@+id/textProductExpiry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expires: 01/09/2025"
+        android:text="Expires: --/--/----"
         android:textSize="14sp"
-        android:textColor="#777777"/>
+        android:textColor="@android:color/darker_gray"/>
 </LinearLayout>

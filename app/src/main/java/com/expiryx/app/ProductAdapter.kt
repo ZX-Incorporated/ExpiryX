@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ProductAdapter(private val products: List<Product>) :
+class ProductAdapter(private var products: List<Product>) :
     RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -26,5 +26,11 @@ class ProductAdapter(private val products: List<Product>) :
         holder.expiry.text = "Expires: ${product.expirationDate}"
     }
 
-    override fun getItemCount() = products.size
+    override fun getItemCount(): Int = products.size
+
+    // ✅ Update list dynamically
+    fun updateProducts(newProducts: List<Product>) {
+        products = newProducts
+        notifyDataSetChanged()
+    }
 }
