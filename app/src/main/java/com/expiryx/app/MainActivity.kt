@@ -1,48 +1,46 @@
 package com.expiryx.app
 
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.launch
+import android.view.View
+import android.widget.ImageButton
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var adapter: ProductAdapter
+
+    private lateinit var recycler: RecyclerView
+    private lateinit var emptyState: View
+    private lateinit var db: AppDatabase
+    private lateinit var addButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recycler = findViewById<RecyclerView>(R.id.recyclerProducts)
-        val emptyState = findViewById<View>(R.id.emptyStateContainer)
-        val addButton = findViewById<ImageButton>(R.id.btnAddProduct)
+        recycler = findViewById(R.id.recyclerProducts)
+        emptyState = findViewById(R.id.emptyStateContainer)
+        addButton = findViewById(R.id.btnAddProduct) // ← hook up the plus button
+        db = AppDatabase.getDatabase(this)
 
-        adapter = ProductAdapter(listOf())
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = adapter
-
-        val db = AppDatabase.getDatabase(this)
-
-        // ✅ Observe LiveData
-        db.productDao().getAll().observe(this) { products ->
-            if (products.isEmpty()) {
+        // Observe product list
+        db.productDao().getAll().observe(this, Observer { products ->
+            if (products.isNullOrEmpty()) {
                 recycler.visibility = View.GONE
                 emptyState.visibility = View.VISIBLE
             } else {
                 recycler.visibility = View.VISIBLE
                 emptyState.visibility = View.GONE
-                adapter.updateProducts(products) // refresh adapter
+                recycler.layoutManager = LinearLayoutManager(this)
+                recycler.adapter = ProductAdapter(products)
             }
-        }
+        })
 
-        // Open add-product bottom sheet
+        // Handle Plus button click → open bottom sheet
         addButton.setOnClickListener {
             val bottomSheet = AddProductBottomSheet()
             bottomSheet.show(supportFragmentManager, "AddProductBottomSheet")
         }
     }
 }
-
