@@ -1,1 +1,1 @@
-Nigger Fuck
+ExpiryX is a mobile app that helps reduce food waste at home by tracking grocery expiry dates. Users can scan barcodes or expiry labels using smartphone cameras and barcode recognition, log food items, and get notifications when items are about to expire. The shop function on the app shows the lowest price for known products at major Australian supermarkets. The app currently only works in Australia but expansion to a wider market is planned.
