@@ -50,13 +50,25 @@
             android:contentDescription="Search" />
     </LinearLayout>
 
+    <!-- 🔍 Search bar (hidden by default, toggled by search icon) -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:queryHint="Search products..."
+        android:iconifiedByDefault="false"
+        android:visibility="gone"
+        android:background="@drawable/edit_text_background"
+        android:padding="8dp"
+        android:layout_below="@id/topBar"/>
+
     <!-- Main content -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerProducts"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottomNav"
-        android:layout_below="@id/topBar"
+        android:layout_below="@id/searchView"
         android:visibility="gone" />
 
     <!-- Empty State -->
@@ -65,7 +77,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/bottomNav"
-        android:layout_below="@id/topBar"
+        android:layout_below="@id/searchView"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="16dp">
