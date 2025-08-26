@@ -18,6 +18,15 @@
             android:textStyle="bold"
             android:paddingBottom="16dp"/>
 
+        <ImageView
+            android:id="@+id/imageProductPreview"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_placeholder"/>
+
         <EditText
             android:id="@+id/editTextProductName"
             android:layout_width="match_parent"
@@ -26,7 +35,6 @@
             android:padding="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Make it clickable, not keyboard-editable -->
         <EditText
             android:id="@+id/editTextExpirationDate"
             android:layout_width="match_parent"
@@ -78,16 +86,6 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/edit_text_background"/>
 
-        <!-- Repurposed as Save Product -->
-        <Button
-            android:id="@+id/buttonUploadImage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Save Product"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="@color/teal_200"
-            android:textColor="@android:color/white"/>
-
         <CheckBox
             android:id="@+id/checkboxFavorite"
             android:layout_width="wrap_content"
@@ -96,11 +94,20 @@
             android:layout_marginTop="12dp"/>
 
         <Button
+            android:id="@+id/buttonSaveProduct"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Product"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/teal_200"
+            android:textColor="@android:color/white"/>
+
+        <Button
             android:id="@+id/buttonCancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Cancel"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="12dp"
             android:backgroundTint="@android:color/holo_red_dark"
             android:textColor="@android:color/white"/>
     </LinearLayout>

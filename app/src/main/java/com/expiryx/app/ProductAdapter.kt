@@ -1,129 +1,149 @@
 package com.expiryx.app
 
-import android.net.Uri
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.util.*
+
+sealed class ProductListItem {
+    data class Header(val title: String, val color: Int) : ProductListItem()
+    data class ProductItem(val product: Product) : ProductListItem()
+}
 
 class ProductAdapter(
-    private val onItemClick: (Product) -> Unit,
-    private val onFavoriteClick: (Product) -> Unit
-) : ListAdapter<ProductListItem, RecyclerView.ViewHolder>(DiffCallback()) {
+    private val onFavoriteClick: (Product) -> Unit,
+    private val onItemClick: (Product) -> Unit
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    companion object {
-        private const val TYPE_HEADER = 0
-        private const val TYPE_ITEM = 1
+    private var items: List<ProductListItem> = emptyList()
+
+    fun updateData(products: List<Product>) {
+        val groupedItems = mutableListOf<ProductListItem>()
+
+        val grouped = products
+            .filterNot { isOlderThan7DaysExpired(it) } // exclude older than 7 days expired
+            .groupBy { getSectionForProduct(it) }
+
+        // Ordered headers
+        val order = listOf(
+            "Expired",
+            "Expires in 24 hours",
+            "Expires in 3 days",
+            "Expires in 7 days",
+            "Expires in 14 days",
+            "Expires in 3 months",
+            "Expires in 1 year or more"
+        )
+
+        order.forEach { section ->
+            grouped.entries.find { it.key.first == section }?.let { entry ->
+                groupedItems.add(ProductListItem.Header(entry.key.first, entry.key.second))
+                entry.value.forEach { product ->
+                    groupedItems.add(ProductListItem.ProductItem(product))
+                }
+            }
+        }
+
+        items = groupedItems
+        notifyDataSetChanged()
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)) {
-            is ProductListItem.Header -> TYPE_HEADER
-            is ProductListItem.Item -> TYPE_ITEM
+        return when (items[position]) {
+            is ProductListItem.Header -> 0
+            is ProductListItem.ProductItem -> 1
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        return when (viewType) {
-            TYPE_HEADER -> {
-                val view = inflater.inflate(R.layout.item_header, parent, false)
-                HeaderViewHolder(view)
-            }
-            else -> {
-                val view = inflater.inflate(R.layout.item_product, parent, false)
-                ProductViewHolder(view)
-            }
+        return if (viewType == 0) {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_header, parent, false)
+            HeaderViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_product, parent, false)
+            ProductViewHolder(view)
         }
     }
+
+    override fun getItemCount(): Int = items.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (val item = getItem(position)) {
+        when (val item = items[position]) {
             is ProductListItem.Header -> (holder as HeaderViewHolder).bind(item)
-            is ProductListItem.Item -> (holder as ProductViewHolder).bind(item.product)
+            is ProductListItem.ProductItem -> (holder as ProductViewHolder).bind(item.product)
         }
     }
 
-    inner class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val title: TextView = view.findViewById(R.id.headerTitle)
-        private val bar: View = view.findViewById(R.id.headerBar)
+        private val headerBar: View = view.findViewById(R.id.headerBar)
 
         fun bind(header: ProductListItem.Header) {
             title.text = header.title
-            bar.setBackgroundColor(
-                ContextCompat.getColor(itemView.context, header.colorRes)
-            )
+            headerBar.setBackgroundColor(header.color)
         }
     }
 
     inner class ProductViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.textProductName)
         private val notes: TextView = view.findViewById(R.id.textProductNotes)
-        private val qty: TextView = view.findViewById(R.id.textProductQuantity)
-        private val image: ImageView = view.findViewById(R.id.imageProduct)
-        private val favorite: ImageButton = view.findViewById(R.id.btnFavorite)
-        private val leftAccent: View = view.findViewById(R.id.leftAccent)
+        private val quantity: TextView = view.findViewById(R.id.textProductQuantity)
+        private val favButton: ImageButton = view.findViewById(R.id.btnFavorite)
         private val favGlow: View = view.findViewById(R.id.favGlow)
 
         fun bind(product: Product) {
             name.text = product.name
             notes.text = product.notes ?: ""
-            qty.text = "x${product.quantity}"
+            quantity.text = "x${product.quantity}"
 
-            // Load image if available
-            if (!product.imageUri.isNullOrEmpty()) {
-                Glide.with(itemView.context)
-                    .load(Uri.parse(product.imageUri))
-                    .placeholder(R.drawable.ic_placeholder)
-                    .into(image)
+            if (product.isFavorite) {
+                favGlow.visibility = View.VISIBLE
+                favButton.setImageResource(R.drawable.ic_heart_unfilled)
+                favButton.setColorFilter(Color.parseColor("#E91E63"))
             } else {
-                image.setImageResource(R.drawable.ic_placeholder)
+                favGlow.visibility = View.GONE
+                favButton.setImageResource(R.drawable.ic_heart_unfilled)
+                favButton.clearColorFilter()
             }
 
-            // Handle favorite glow
-            favGlow.visibility = if (product.isFavorite) View.VISIBLE else View.GONE
-            favorite.setImageResource(
-                if (product.isFavorite) R.drawable.ic_heart_filled
-                else R.drawable.ic_heart_unfilled
-            )
-
-            // Accent bar color based on expiry
-            val now = System.currentTimeMillis()
-            val oneDay = 24 * 60 * 60 * 1000L
-            val colorRes = when {
-                product.expirationDate < now -> R.color.red
-                product.expirationDate <= now + oneDay -> R.color.orange
-                product.expirationDate <= now + 3 * oneDay -> R.color.yellow
-                product.expirationDate <= now + 14 * oneDay -> R.color.green
-                product.expirationDate <= now + 90 * oneDay -> R.color.blue
-                else -> R.color.purple
-            }
-            leftAccent.setBackgroundColor(ContextCompat.getColor(itemView.context, colorRes))
-
-            // Click listeners
+            favButton.setOnClickListener { onFavoriteClick(product) }
             itemView.setOnClickListener { onItemClick(product) }
-            favorite.setOnClickListener { onFavoriteClick(product) }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<ProductListItem>() {
-        override fun areItemsTheSame(oldItem: ProductListItem, newItem: ProductListItem): Boolean {
-            return if (oldItem is ProductListItem.Item && newItem is ProductListItem.Item) {
-                oldItem.product.id == newItem.product.id
-            } else if (oldItem is ProductListItem.Header && newItem is ProductListItem.Header) {
-                oldItem.title == newItem.title
-            } else false
-        }
+    private fun isOlderThan7DaysExpired(product: Product): Boolean {
+        val today = LocalDate.now()
+        val expiryDate = product.expirationDate?.let {
+            Date(it).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        } ?: return false
+        val daysDiff = ChronoUnit.DAYS.between(today, expiryDate).toInt()
+        return daysDiff < -7
+    }
 
-        override fun areContentsTheSame(oldItem: ProductListItem, newItem: ProductListItem): Boolean {
-            return oldItem == newItem
+    private fun getSectionForProduct(product: Product): Pair<String, Int> {
+        val today = LocalDate.now()
+        val expiryDate = product.expirationDate?.let {
+            Date(it).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        } ?: today
+        val daysDiff = ChronoUnit.DAYS.between(today, expiryDate).toInt()
+
+        return when {
+            daysDiff < 0 -> "Expired" to Color.parseColor("#D32F2F")
+            daysDiff <= 1 -> "Expires in 24 hours" to Color.parseColor("#F57C00")
+            daysDiff <= 3 -> "Expires in 3 days" to Color.parseColor("#FFA000")
+            daysDiff <= 7 -> "Expires in 7 days" to Color.parseColor("#FBC02D")
+            daysDiff <= 14 -> "Expires in 14 days" to Color.parseColor("#388E3C")
+            daysDiff <= 90 -> "Expires in 3 months" to Color.parseColor("#1976D2")
+            else -> "Expires in 1 year or more" to Color.parseColor("#7B1FA2")
         }
     }
 }

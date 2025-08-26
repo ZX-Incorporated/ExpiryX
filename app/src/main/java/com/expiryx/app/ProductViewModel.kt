@@ -1,33 +1,32 @@
 package com.expiryx.app
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
-class ProductViewModel(private val dao: ProductDao) : ViewModel() {
+class ProductViewModel(private val repository: ProductRepository) : ViewModel() {
 
-    val allProducts: LiveData<List<Product>> = dao.getAllProducts()
+    val allProducts: LiveData<List<Product>> = repository.allProducts
+    val favoriteProducts: LiveData<List<Product>> = repository.favoriteProducts
 
     fun insert(product: Product) = viewModelScope.launch {
-        dao.insert(product)
+        repository.insert(product)
     }
 
     fun update(product: Product) = viewModelScope.launch {
-        dao.update(product)
+        repository.update(product)
     }
 
     fun delete(product: Product) = viewModelScope.launch {
-        dao.delete(product)
+        repository.delete(product)
     }
 }
 
-class ProductViewModelFactory(private val dao: ProductDao) : ViewModelProvider.Factory {
+class ProductViewModelFactory(private val repository: ProductRepository) :
+    ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ProductViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ProductViewModel(dao) as T
+            return ProductViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

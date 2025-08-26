@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import java.text.SimpleDateFormat
 import java.util.*
@@ -13,52 +15,63 @@ import java.util.*
 class ProductDetailBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
+        private const val ARG_PRODUCT = "product"
+
         fun newInstance(product: Product): ProductDetailBottomSheet {
             val fragment = ProductDetailBottomSheet()
-            val args = Bundle().apply { putParcelable("product", product) }
+            val args = Bundle()
+            args.putParcelable(ARG_PRODUCT, product)
             fragment.arguments = args
             return fragment
         }
     }
 
-    private lateinit var product: Product
+    private var product: Product? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        product = requireArguments().getParcelable("product")!!
+        product = arguments?.getParcelable(ARG_PRODUCT)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        // ✅ Inflate the correct layout
+    ): View? {
         val view = inflater.inflate(R.layout.bottom_sheet_product_detail, container, false)
 
-        // ✅ Always use view.findViewById, not just findViewById
-        val name = view.findViewById<TextView>(R.id.txtDetailName)
-        val expiry = view.findViewById<TextView>(R.id.txtDetailExpiry)
-        val qty = view.findViewById<TextView>(R.id.txtDetailQuantity)
-        val deleteBtn = view.findViewById<Button>(R.id.btnDelete)
-        val editBtn = view.findViewById<Button>(R.id.btnEdit)
+        val img: ImageView = view.findViewById(R.id.imgProductDetail)
+        val name: TextView = view.findViewById(R.id.txtDetailName)
+        val expiry: TextView = view.findViewById(R.id.txtDetailExpiry)
+        val qty: TextView = view.findViewById(R.id.txtDetailQuantity)
+        val btnDelete: Button = view.findViewById(R.id.btnDelete)
+        val btnEdit: Button = view.findViewById(R.id.btnEdit)
 
-        // Fill details
-        name.text = product.name
-        expiry.text = "Expires on: ${
-            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(product.expirationDate))
-        }"
-        qty.text = "Quantity: ${product.quantity}"
+        product?.let {
+            Glide.with(requireContext())
+                .load(it.imageUri ?: R.drawable.ic_placeholder)
+                .into(img)
 
-        // Delete product
-        deleteBtn.setOnClickListener {
-            (activity as? MainActivity)?.deleteProductWithConfirmation(product)
+            name.text = it.name
+            expiry.text = "Expires on: " + (it.expirationDate?.let { d ->
+                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(d))
+            } ?: "N/A")
+            qty.text = "Quantity: ${it.quantity}"
+        }
+
+        // Delete product with confirmation via MainActivity
+        btnDelete.setOnClickListener {
+            product?.let { p ->
+                (activity as? MainActivity)?.deleteProductWithConfirmation(p)
+            }
             dismiss()
         }
 
-        // Edit product
-        editBtn.setOnClickListener {
-            (activity as? MainActivity)?.editProduct(product)
+        // Edit product via MainActivity
+        btnEdit.setOnClickListener {
+            product?.let { p ->
+                (activity as? MainActivity)?.editProduct(p)
+            }
             dismiss()
         }
 
