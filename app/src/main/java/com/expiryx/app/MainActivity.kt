@@ -51,21 +51,18 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // Observe products
         productViewModel.allProducts.observe(this) { products ->
             allProducts = products ?: emptyList()
             updateList(allProducts)
         }
 
-        // Toggle search view
         btnSearch.setOnClickListener {
             searchView.visibility =
                 if (searchView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
-        // Search filtering
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val filtered = if (!newText.isNullOrBlank()) {
                     allProducts.filter { it.name.contains(newText, ignoreCase = true) }
@@ -88,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             recyclerView.visibility = View.VISIBLE
             emptyState.visibility = View.GONE
-            adapter.updateData(products) // ✅ FIXED
+            adapter.updateData(products)
         }
     }
 

@@ -1,12 +1,15 @@
 package com.expiryx.app
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,6 +33,16 @@ class ManualEntryActivity : AppCompatActivity() {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private var editingProduct: Product? = null
     private var expiryMillis: Long? = null
+    private var selectedImageUri: String? = null
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            uri?.let {
+                contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                selectedImageUri = it.toString()
+                Glide.with(this).load(it).into(imagePreview)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,64 +59,67 @@ class ManualEntryActivity : AppCompatActivity() {
         cancelButton = findViewById(R.id.buttonCancel)
         imagePreview = findViewById(R.id.imageProductPreview)
 
-        // Check if product passed
+        val isEdit = intent.getBooleanExtra("isEdit", false)
         editingProduct = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("product", Product::class.java)
         } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("product")
+            @Suppress("DEPRECATION") intent.getParcelableExtra("product")
         }
 
-        val imageUri = intent.getStringExtra("imageUri")
-        if (imageUri != null) {
-            imagePreview.setImageURI(Uri.parse(imageUri))
-        }
+        selectedImageUri = intent.getStringExtra("imageUri") ?: editingProduct?.imageUri
 
+        // Prefill
         editingProduct?.let { product ->
-            nameInput.setText(product.name)
-            product.expirationDate?.let { dateInput.setText(dateFormat.format(Date(it))) }
+            if (product.name.isNotBlank()) nameInput.setText(product.name)
+            product.expirationDate?.let {
+                expiryMillis = it
+                dateInput.setText(dateFormat.format(Date(it)))
+            }
             quantityInput.setText(product.quantity.toString())
             reminderInput.setText(product.reminderDays.toString())
             weightInput.setText(product.weight ?: "")
             notesInput.setText(product.notes ?: "")
             favoriteCheck.isChecked = product.isFavorite
-            product.imageUri?.let { imagePreview.setImageURI(Uri.parse(it)) }
+        }
+
+        // Load image
+        if (!selectedImageUri.isNullOrBlank()) {
+            Glide.with(this).load(Uri.parse(selectedImageUri)).into(imagePreview)
+        } else {
+            imagePreview.setImageResource(R.drawable.ic_placeholder)
+        }
+
+        // Change/remove image
+        imagePreview.setOnClickListener { pickImageLauncher.launch(arrayOf("image/*")) }
+        imagePreview.setOnLongClickListener {
+            selectedImageUri = null
+            imagePreview.setImageResource(R.drawable.ic_placeholder)
+            Toast.makeText(this, "Image removed", Toast.LENGTH_SHORT).show()
+            true
         }
 
         dateInput.setOnClickListener {
             val cal = Calendar.getInstance()
-            val picker = DatePickerDialog(
-                this,
-                { _, year, month, day ->
-                    cal.set(year, month, day, 0, 0)
-                    expiryMillis = cal.timeInMillis
-                    dateInput.setText(dateFormat.format(cal.time))
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            )
-            picker.show()
+            DatePickerDialog(this, { _, y, m, d ->
+                cal.set(y, m, d, 0, 0)
+                expiryMillis = cal.timeInMillis
+                dateInput.setText(dateFormat.format(cal.time))
+            }, cal[Calendar.YEAR], cal[Calendar.MONTH], cal[Calendar.DAY_OF_MONTH]).show()
         }
 
         saveButton.setOnClickListener {
             val name = nameInput.text.toString().trim()
             if (name.isEmpty()) {
-                nameInput.error = "Name required"
-                return@setOnClickListener
+                nameInput.error = "Name required"; return@setOnClickListener
             }
-
             val expiry = expiryMillis
-                ?: dateInput.text.toString().takeIf { it.isNotEmpty() }?.let {
-                    dateFormat.parse(it)?.time
-                }
-
+                ?: dateInput.text.toString().takeIf { it.isNotEmpty() }
+                    ?.let { dateFormat.parse(it)?.time }
             if (expiry == null) {
-                dateInput.error = "Expiry date required"
-                return@setOnClickListener
+                dateInput.error = "Expiry date required"; return@setOnClickListener
             }
 
-            val newProduct = Product(
+            val product = Product(
                 id = editingProduct?.id ?: 0,
                 name = name,
                 expirationDate = expiry,
@@ -111,18 +127,17 @@ class ManualEntryActivity : AppCompatActivity() {
                 reminderDays = reminderInput.text.toString().toIntOrNull() ?: 0,
                 notes = notesInput.text.toString().takeIf { it.isNotEmpty() },
                 weight = weightInput.text.toString().takeIf { it.isNotEmpty() },
-                imageUri = editingProduct?.imageUri ?: imageUri,
+                imageUri = selectedImageUri,
                 isFavorite = favoriteCheck.isChecked
             )
 
-            if (editingProduct == null) {
-                productViewModel.insert(newProduct)
-                Toast.makeText(this, "Product saved", Toast.LENGTH_SHORT).show()
-            } else {
-                productViewModel.update(newProduct)
+            if (isEdit) {
+                productViewModel.update(product)
                 Toast.makeText(this, "Product updated", Toast.LENGTH_SHORT).show()
+            } else {
+                productViewModel.insert(product)
+                Toast.makeText(this, "Product saved", Toast.LENGTH_SHORT).show()
             }
-
             finish()
         }
 

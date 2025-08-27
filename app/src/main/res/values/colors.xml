@@ -24,6 +24,14 @@
 
         <color name="gradient_overlay_start">#33FF4081</color>
         <color name="gradient_overlay_center">#66FF4081</color>
+    <color name="header_expired">#D32F2F</color>
+    <color name="header_today">#F57C00</color>
+    <color name="header_soon">#FBC02D</color>
+    <color name="header_later">#388E3C</color>
+
+    <color name="gray">#9E9E9E</color>
+
+
 
 
 </resources>

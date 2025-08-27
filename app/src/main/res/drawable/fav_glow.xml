@@ -7,6 +7,5 @@
         android:centerColor="@color/gradient_overlay_center"
         android:endColor="@android:color/transparent"
         android:angle="270"
-        android:type="linear" /> <!-- Optional: type="linear" for clarity -->
-
+        android:type="linear" />
 </shape>

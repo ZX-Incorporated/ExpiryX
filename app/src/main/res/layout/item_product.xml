@@ -1,90 +1,60 @@
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/productCard"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:foreground="?attr/selectableItemBackground"
-    android:elevation="2dp"
-    android:clipToPadding="false"
-    android:clipChildren="false"
-    android:padding="8dp">
+    android:orientation="horizontal"
+    android:background="@drawable/product_tile_background"
+    android:padding="12dp"
+    android:layout_marginVertical="4dp"
+    android:gravity="center_vertical">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <ImageView
+        android:id="@+id/imageProduct"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_placeholder"
+        android:scaleType="centerCrop"
+        android:background="@drawable/rounded_image_bg"
+        android:contentDescription="Product image"
+        android:layout_marginEnd="12dp" />
 
-        <!-- Left colored accent -->
-        <View
-            android:id="@+id/leftAccent"
-            android:layout_width="4dp"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:background="@color/teal_700"/>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <!-- Product image -->
-        <ImageView
-            android:id="@+id/imageProduct"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginStart="12dp"
-            android:layout_alignParentTop="true"
-            android:layout_toEndOf="@id/leftAccent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_placeholder"/>
-
-        <!-- Product name -->
         <TextView
             android:id="@+id/textProductName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/imageProduct"
-            android:layout_marginStart="12dp"
             android:text="Product Name"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#000000"/>
+            android:textColor="@android:color/black" />
 
-        <!-- Product notes -->
         <TextView
             android:id="@+id/textProductNotes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/textProductName"
-            android:layout_alignStart="@id/textProductName"
-            android:text="Notes here"
+            android:text="Notes or brand"
             android:textSize="14sp"
-            android:textColor="#666666"/>
+            android:textColor="#666666" />
 
-        <!-- Quantity -->
         <TextView
             android:id="@+id/textProductQuantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:text="x1"
+            android:text="Qty: 1"
             android:textSize="14sp"
-            android:textColor="#000000"/>
+            android:textColor="#444444" />
+    </LinearLayout>
 
-        <!-- Favorite button -->
-        <ImageButton
-            android:id="@+id/btnFavorite"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_heart_unfilled"
-            android:contentDescription="Favorite"/>
-
-        <!-- 🔥 Favorite glow bar -->
-        <View
-            android:id="@+id/favGlow"
-            android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_alignParentBottom="true"
-            android:background="@drawable/fav_glow"
-            android:visibility="gone"/>
-    </RelativeLayout>
-</androidx.cardview.widget.CardView>
+    <ImageButton
+        android:id="@+id/btnFavorite"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_heart_unfilled"
+        android:background="@android:color/transparent"
+        android:contentDescription="Favorite button" />
+</LinearLayout>
