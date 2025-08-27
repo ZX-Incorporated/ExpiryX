@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ProductAdapter
     private lateinit var searchView: SearchView
     private lateinit var btnSearch: ImageView
+    private lateinit var btnHistory: ImageView
 
     private var allProducts: List<Product> = emptyList()
 
@@ -36,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         addButton = findViewById(R.id.btnAddProduct)
         searchView = findViewById(R.id.searchView)
         btnSearch = findViewById(R.id.btnSearch)
+        btnHistory = findViewById(R.id.btnHistory) // 🆕 grab history button
 
         adapter = ProductAdapter(
             onFavoriteClick = { product ->
@@ -75,9 +77,15 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        // Add product bottom sheet
         addButton.setOnClickListener {
             val bottomSheet = AddProductBottomSheet()
             bottomSheet.show(supportFragmentManager, "AddProductBottomSheet")
+        }
+
+        // 🆕 Navigate to History page
+        btnHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
     }
 
@@ -88,15 +96,18 @@ class MainActivity : AppCompatActivity() {
         } else {
             recyclerView.visibility = View.VISIBLE
             emptyState.visibility = View.GONE
-            adapter.updateData(products) // ✅ FIXED
+            adapter.updateData(products)
         }
     }
 
     fun deleteProductWithConfirmation(product: Product) {
         AlertDialog.Builder(this)
-            .setTitle("Delete Product")
-            .setMessage("Are you sure you want to delete ${product.name}?")
-            .setPositiveButton("Delete") { _, _ -> productViewModel.delete(product) }
+            .setTitle("Remove Product")
+            .setMessage("Do you want to mark ${product.name} as consumed?")
+            .setPositiveButton("Yes") { _, _ ->
+                val updated = product.copy(status = ProductStatus.CONSUMED) // 🆕 mark consumed
+                productViewModel.update(updated)
+            }
             .setNegativeButton("Cancel", null)
             .show()
     }

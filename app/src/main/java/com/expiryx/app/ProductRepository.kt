@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 class ProductRepository(private val productDao: ProductDao) {
     val allProducts: LiveData<List<Product>> = productDao.getAllProducts()
     val favoriteProducts: LiveData<List<Product>> = productDao.getFavoriteProducts()
+    val history: LiveData<List<Product>> = productDao.getHistory()
 
     suspend fun insert(product: Product) = productDao.insert(product)
     suspend fun update(product: Product) = productDao.update(product)

@@ -134,6 +134,7 @@
         android:weightSum="4">
 
         <ImageView
+            android:id="@+id/btnHome"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -142,6 +143,7 @@
             android:padding="8dp" />
 
         <ImageView
+            android:id="@+id/btnStore"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -149,7 +151,9 @@
             android:contentDescription="Store"
             android:padding="8dp" />
 
+        <!-- 🆕 History button -->
         <ImageView
+            android:id="@+id/btnHistory"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -158,6 +162,7 @@
             android:padding="8dp" />
 
         <ImageView
+            android:id="@+id/btnSettings"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

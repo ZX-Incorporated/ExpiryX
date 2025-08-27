@@ -5,8 +5,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 
+enum class ProductStatus {
+    ACTIVE,
+    CONSUMED,
+    EXPIRED
+}
+
 @Parcelize
-@Entity(tableName = "products") // ✅ matches DB name
+@Entity(tableName = "products")
 data class Product(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
@@ -16,5 +22,6 @@ data class Product(
     val notes: String? = null,
     val weight: String? = null,
     val imageUri: String? = null,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val status: ProductStatus = ProductStatus.ACTIVE // 🆕 new field
 ) : Parcelable

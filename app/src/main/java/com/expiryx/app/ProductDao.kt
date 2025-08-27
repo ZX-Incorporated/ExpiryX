@@ -5,11 +5,14 @@ import androidx.room.*
 
 @Dao
 interface ProductDao {
-    @Query("SELECT * FROM products ORDER BY expirationDate ASC")
+    @Query("SELECT * FROM products WHERE status = 'ACTIVE' ORDER BY expirationDate ASC")
     fun getAllProducts(): LiveData<List<Product>>
 
-    @Query("SELECT * FROM products WHERE isFavorite = 1")
+    @Query("SELECT * FROM products WHERE isFavorite = 1 AND status = 'ACTIVE'")
     fun getFavoriteProducts(): LiveData<List<Product>>
+
+    @Query("SELECT * FROM products WHERE status != 'ACTIVE' ORDER BY expirationDate DESC")
+    fun getHistory(): LiveData<List<Product>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(product: Product)

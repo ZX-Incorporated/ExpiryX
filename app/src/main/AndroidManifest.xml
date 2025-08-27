@@ -40,5 +40,12 @@
             android:name=".BarcodeScannerActivity"
             android:exported="false"
             android:launchMode="singleTop" />
+
+        <!-- 🆕 Add this for your History screen -->
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:label="History" />
+
     </application>
 </manifest>

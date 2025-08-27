@@ -7,6 +7,7 @@ class ProductViewModel(private val repository: ProductRepository) : ViewModel() 
 
     val allProducts: LiveData<List<Product>> = repository.allProducts
     val favoriteProducts: LiveData<List<Product>> = repository.favoriteProducts
+    val history: LiveData<List<Product>> = repository.history
 
     fun insert(product: Product) = viewModelScope.launch {
         repository.insert(product)
