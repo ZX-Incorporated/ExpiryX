@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/addProductBottomRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -7,8 +9,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:background="@android:color/white">
+        android:padding="20dp"
+        android:background="@drawable/rounded_card_bg"
+        android:layout_margin="8dp">
 
         <TextView
             android:id="@+id/textAddProduct"
@@ -18,19 +21,22 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:paddingBottom="16dp"/>
+            android:paddingBottom="12dp"/>
 
         <LinearLayout
             android:id="@+id/optionCamera"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:background="@drawable/rounded_bg_grey"
+            android:layout_marginTop="4dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_camera"/>
+                android:src="@android:drawable/ic_menu_camera"
+                android:contentDescription="Take a Photo"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -44,12 +50,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:background="@drawable/rounded_bg_grey"
+            android:layout_marginTop="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_upload"/>
+                android:src="@android:drawable/ic_menu_upload"
+                android:contentDescription="Upload from Device"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -63,12 +72,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:background="@drawable/rounded_bg_grey"
+            android:layout_marginTop="8dp">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@android:drawable/ic_menu_edit"/>
+                android:src="@android:drawable/ic_menu_edit"
+                android:contentDescription="Manual Entry"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -85,16 +97,18 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:padding="16dp"
+            android:padding="14dp"
+            android:layout_marginTop="8dp"
             android:textColor="@android:color/holo_red_dark"/>
     </LinearLayout>
 
-    <!-- Progress overlay (center) -->
+    <!-- Progress overlay -->
     <ProgressBar
         android:id="@+id/progressBarUpload"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"
+        android:indeterminateTint="@color/teal_700"
         android:visibility="gone" />
 </FrameLayout>

@@ -4,14 +4,20 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
-import android.widget.*
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -19,7 +25,6 @@ import java.util.concurrent.TimeUnit
 
 class AddProductBottomSheet : BottomSheetDialogFragment() {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var progressBar: ProgressBar? = null
 
     private val pickImageLauncher = registerForActivityResult(
@@ -29,15 +34,14 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
             Toast.makeText(requireContext(), "No image selected", Toast.LENGTH_SHORT).show()
             return@registerForActivityResult
         }
-        requireContext().contentResolver.takePersistableUriPermission(
-            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-        )
+        try {
+            requireContext().contentResolver.takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // Some providers don't support persistable permission; ignore gracefully.
+        }
         analyseImageForBarcode(uri)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        scope.cancel()
     }
 
     override fun onCreateView(
@@ -55,22 +59,23 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
 
         optionManual.setOnClickListener {
             startActivity(Intent(requireContext(), ManualEntryActivity::class.java))
-            dismiss()
+            dismissAllowingStateLoss()
         }
         optionCamera.setOnClickListener {
             startActivity(Intent(requireContext(), BarcodeScannerActivity::class.java))
-            dismiss()
+            dismissAllowingStateLoss()
         }
         optionUpload.setOnClickListener {
             pickImageLauncher.launch(arrayOf("image/*"))
         }
-        optionCancel.setOnClickListener { dismiss() }
+        optionCancel.setOnClickListener { dismissAllowingStateLoss() }
 
         return view
     }
 
     private fun showLoading(show: Boolean) {
         progressBar?.isVisible = show
+        isCancelable = !show
     }
 
     private fun analyseImageForBarcode(uri: Uri) {
@@ -93,14 +98,20 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                         fetchProductInfo(code, uri)
                     } else {
                         showLoading(false)
-                        Toast.makeText(requireContext(),
-                            "No barcode found in image", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "No barcode found in image",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
                 .addOnFailureListener {
                     showLoading(false)
-                    Toast.makeText(requireContext(),
-                        "Failed to analyse image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Failed to analyse image",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
         } catch (e: Exception) {
             showLoading(false)
@@ -110,58 +121,84 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
 
     private fun fetchProductInfo(barcode: String, uploadedImage: Uri) {
         val client = OkHttpClient.Builder()
-            .callTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .callTimeout(15, TimeUnit.SECONDS)
             .build()
         val request = Request.Builder()
             .url("https://world.openfoodfacts.org/api/v0/product/$barcode.json")
             .build()
 
-        scope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = client.newCall(request).execute()
-                val body = response.body?.string()
-                withContext(Dispatchers.Main) {
-                    if (!response.isSuccessful || body == null) {
-                        showLoading(false)
-                        Toast.makeText(requireContext(),
-                            "Product not found", Toast.LENGTH_SHORT).show()
-                        return@withContext
-                    }
-                    val json = JSONObject(body)
-                    if (json.optInt("status") == 1) {
-                        val prod = json.getJSONObject("product")
-                        val apiImage = prod.optString("image_url", null)
+                val body = withContext(Dispatchers.IO) {
+                    val response = client.newCall(request).execute()
+                    if (!response.isSuccessful) null else response.body?.string()
+                }
 
-                        val product = Product(
-                            id = 0,
-                            name = prod.optString("product_name", ""),
-                            expirationDate = null,
-                            quantity = 1,
-                            reminderDays = 0,
-                            notes = prod.optString("brands", ""),
-                            weight = prod.optString("quantity", ""),
-                            imageUri = apiImage ?: uploadedImage.toString(),
-                            isFavorite = false
-                        )
+                if (body == null) {
+                    showLoading(false)
+                    Toast.makeText(requireContext(), "Product not found", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val json = JSONObject(body)
+                if (json.optInt("status") == 1) {
+                    val prod = json.getJSONObject("product")
+                    val apiImage = prod.optString("image_url", null)
+                    val name = prod.optString("product_name", "").trim()
+
+                    // If name is blank, jump to manual entry but carry image + barcode
+                    if (name.isEmpty()) {
                         showLoading(false)
                         val intent = Intent(requireContext(), ManualEntryActivity::class.java).apply {
-                            putExtra("product", product)
                             putExtra("isEdit", false)
+                            putExtra("product", Product(
+                                id = 0,
+                                name = "",
+                                expirationDate = null,
+                                quantity = 1,
+                                reminderDays = 0,
+                                notes = prod.optString("brands", "").takeIf { it.isNotBlank() },
+                                weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
+                                imageUri = apiImage ?: uploadedImage.toString(),
+                                isFavorite = false
+                            ))
                         }
                         startActivity(intent)
-                        dismiss()
-                    } else {
-                        showLoading(false)
-                        Toast.makeText(requireContext(),
-                            "Product not found", Toast.LENGTH_SHORT).show()
+                        dismissAllowingStateLoss()
+                        return@launch
                     }
+
+                    val product = Product(
+                        id = 0,
+                        name = name,
+                        expirationDate = null,
+                        quantity = 1,
+                        reminderDays = 0,
+                        notes = prod.optString("brands", "").takeIf { it.isNotBlank() },
+                        weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
+                        imageUri = apiImage ?: uploadedImage.toString(),
+                        isFavorite = false
+                    )
+                    showLoading(false)
+                    val intent = Intent(requireContext(), ManualEntryActivity::class.java).apply {
+                        putExtra("product", product)
+                        putExtra("isEdit", false)
+                    }
+                    startActivity(intent)
+                    dismissAllowingStateLoss()
+                } else {
+                    showLoading(false)
+                    Toast.makeText(requireContext(), "Product not found", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showLoading(false)
-                    Toast.makeText(requireContext(),
-                        "Error fetching product info", Toast.LENGTH_SHORT).show()
-                }
+                showLoading(false)
+                Toast.makeText(
+                    requireContext(),
+                    "Error fetching product info",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }

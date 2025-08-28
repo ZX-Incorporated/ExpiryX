@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,7 +31,9 @@ class ManualEntryActivity : AppCompatActivity() {
     private lateinit var cancelButton: Button
     private lateinit var imagePreview: ImageView
 
-    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+        isLenient = false
+    }
     private var editingProduct: Product? = null
     private var expiryMillis: Long? = null
     private var selectedImageUri: String? = null
@@ -38,7 +41,12 @@ class ManualEntryActivity : AppCompatActivity() {
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
             uri?.let {
-                contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: SecurityException) {}
                 selectedImageUri = it.toString()
                 Glide.with(this).load(it).into(imagePreview)
             }
@@ -101,7 +109,8 @@ class ManualEntryActivity : AppCompatActivity() {
         dateInput.setOnClickListener {
             val cal = Calendar.getInstance()
             DatePickerDialog(this, { _, y, m, d ->
-                cal.set(y, m, d, 0, 0)
+                cal.set(y, m, d, 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
                 expiryMillis = cal.timeInMillis
                 dateInput.setText(dateFormat.format(cal.time))
             }, cal[Calendar.YEAR], cal[Calendar.MONTH], cal[Calendar.DAY_OF_MONTH]).show()
@@ -112,11 +121,18 @@ class ManualEntryActivity : AppCompatActivity() {
             if (name.isEmpty()) {
                 nameInput.error = "Name required"; return@setOnClickListener
             }
-            val expiry = expiryMillis
-                ?: dateInput.text.toString().takeIf { it.isNotEmpty() }
-                    ?.let { dateFormat.parse(it)?.time }
-            if (expiry == null) {
-                dateInput.error = "Expiry date required"; return@setOnClickListener
+
+            val expiry = expiryMillis ?: run {
+                val txt = dateInput.text.toString().trim()
+                if (txt.isEmpty()) {
+                    dateInput.error = "Expiry date required"; return@setOnClickListener
+                }
+                try {
+                    dateFormat.parse(txt)?.time
+                } catch (_: ParseException) {
+                    dateInput.error = "Invalid date (use dd/MM/yyyy)"
+                    return@setOnClickListener
+                }
             }
 
             val product = Product(

@@ -29,6 +29,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSortBy: ImageView
     private lateinit var btnFavorite: ImageView
 
+    // bottom nav icons
+    private lateinit var navHome: ImageView
+    private lateinit var navCart: ImageView
+    private lateinit var navHistory: ImageView
+    private lateinit var navSettings: ImageView
+
     private var allProducts: List<Product> = emptyList()
     private var showFavoritesOnly = false
     private var sortMode = SortMode.EXPIRY_ASC
@@ -45,14 +51,24 @@ class MainActivity : AppCompatActivity() {
         btnSortBy = findViewById(R.id.btnSortBy)
         btnFavorite = findViewById(R.id.btnFavorite)
 
+        // bottom nav
+        navHome = findViewById(R.id.navHome)
+        navCart = findViewById(R.id.navCart)
+        navHistory = findViewById(R.id.navHistory)
+        navSettings = findViewById(R.id.navSettings)
+
         adapter = ProductAdapter(
             onFavoriteClick = { product ->
+                // Toggle in DB (and adapter does optimistic UI update too)
                 val updated = product.copy(isFavorite = !product.isFavorite)
                 productViewModel.update(updated)
             },
             onItemClick = { product ->
                 val bottomSheet = ProductDetailBottomSheet.newInstance(product)
                 bottomSheet.show(supportFragmentManager, "ProductDetailBottomSheet")
+            },
+            onDeleteLongPress = { product ->
+                deleteProductWithConfirmation(product)
             }
         )
 
@@ -61,17 +77,20 @@ class MainActivity : AppCompatActivity() {
 
         // Observe products from DB
         productViewModel.allProducts.observe(this) { products ->
-            allProducts = products ?: emptyList()
+            allProducts = products
             refreshList()
         }
 
-        // 🔍 Toggle search
+        // 🔍 Topbar Search button (icon stays unfilled always)
         btnSearch.setOnClickListener {
-            searchView.visibility =
-                if (searchView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            if (searchView.visibility == View.VISIBLE) {
+                closeSearchCompletely()
+            } else {
+                openSearch()
+            }
         }
 
-        // 🔍 Handle searching
+        // 🔍 Search callbacks
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -83,13 +102,33 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        // When focus leaves & query empty -> hide the whole search bar
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && searchView.query.isNullOrEmpty()) {
+                closeSearchCompletely()
+            }
+        }
+
+        // Force the X close button to completely hide the SearchView if query already empty
+        val closeBtnId = androidx.appcompat.R.id.search_close_btn
+        val closeBtn = searchView.findViewById<ImageView>(closeBtnId)
+        closeBtn?.setOnClickListener {
+            if (!searchView.query.isNullOrEmpty()) {
+                // First clear the text
+                searchView.setQuery("", false)
+            } else {
+                // Then fully hide the bar when already empty
+                closeSearchCompletely()
+            }
+        }
+
         // ➕ Add product
         addButton.setOnClickListener {
             val bottomSheet = AddProductBottomSheet()
             bottomSheet.show(supportFragmentManager, "AddProductBottomSheet")
         }
 
-        // 🔀 Full sort menu
+        // 🔀 Sort menu
         btnSortBy.setOnClickListener { v ->
             val popup = PopupMenu(this, v)
             popup.menu.apply {
@@ -101,7 +140,6 @@ class MainActivity : AppCompatActivity() {
                 add(0, 6, 0, "Quantity (High → Low)")
                 add(0, 7, 0, "Favorites First")
             }
-
             popup.setOnMenuItemClickListener { item ->
                 sortMode = when (item.itemId) {
                     1 -> SortMode.EXPIRY_ASC
@@ -120,7 +158,7 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
 
-        // ❤️ Toggle favorites filter
+        // ❤️ Toggle favorites filter (top bar heart)
         btnFavorite.setOnClickListener {
             showFavoritesOnly = !showFavoritesOnly
             btnFavorite.setImageResource(
@@ -129,17 +167,79 @@ class MainActivity : AppCompatActivity() {
             )
             refreshList()
         }
+
+        // 🧭 Bottom nav clicks
+        navHome.setOnClickListener {
+            // No popup here as requested; just keep home highlighted
+            highlightBottomNav(BottomTab.HOME)
+        }
+        navCart.setOnClickListener {
+            highlightBottomNav(BottomTab.CART)
+            Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
+        }
+        navHistory.setOnClickListener {
+            highlightBottomNav(BottomTab.HISTORY)
+            Toast.makeText(this, "History coming soon…", Toast.LENGTH_SHORT).show()
+        }
+        navSettings.setOnClickListener {
+            highlightBottomNav(BottomTab.SETTINGS)
+            Toast.makeText(this, "Settings coming soon…", Toast.LENGTH_SHORT).show()
+        }
+
+        // Highlight Home on start
+        highlightBottomNav(BottomTab.HOME)
+    }
+
+    // --- Search helpers ---
+    private fun openSearch() {
+        searchView.visibility = View.VISIBLE
+        searchView.isIconified = false
+        searchView.requestFocus()
+    }
+
+    private fun closeSearchCompletely() {
+        searchView.setQuery("", false)
+        searchView.clearFocus()
+        searchView.visibility = View.GONE
+        // list resets to whatever current filters/sort are
+        refreshList()
+    }
+    // --- end search helpers ---
+
+    private fun highlightBottomNav(tab: BottomTab) {
+        when (tab) {
+            BottomTab.HOME -> {
+                navHome.setImageResource(R.drawable.ic_home_filled)
+                navCart.setImageResource(R.drawable.ic_cart) // only 1 cart asset provided
+                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
+                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+            }
+            BottomTab.CART -> {
+                navHome.setImageResource(R.drawable.ic_home_unfilled)
+                navCart.setImageResource(R.drawable.ic_cart)
+                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
+                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+            }
+            BottomTab.HISTORY -> {
+                navHome.setImageResource(R.drawable.ic_home_unfilled)
+                navCart.setImageResource(R.drawable.ic_cart)
+                navHistory.setImageResource(R.drawable.ic_clock_filled)
+                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+            }
+            BottomTab.SETTINGS -> {
+                navHome.setImageResource(R.drawable.ic_home_unfilled)
+                navCart.setImageResource(R.drawable.ic_cart)
+                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
+                // Your filled settings is named 'ic_setting_filled' (missing 's'); keeping unfilled to avoid mismatch
+                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+            }
+        }
     }
 
     private fun refreshList() {
         var list = allProducts
+        if (showFavoritesOnly) list = list.filter { it.isFavorite }
 
-        // filter favorites
-        if (showFavoritesOnly) {
-            list = list.filter { it.isFavorite }
-        }
-
-        // apply sorting
         list = when (sortMode) {
             SortMode.NAME_ASC -> list.sortedBy { it.name.lowercase() }
             SortMode.NAME_DESC -> list.sortedByDescending { it.name.lowercase() }
@@ -180,11 +280,10 @@ class MainActivity : AppCompatActivity() {
         }
         startActivity(intent)
     }
+
     fun markProductAsUsed(product: Product) {
-        // TODO: Move product to history table
         Toast.makeText(this, "${product.name} marked as used", Toast.LENGTH_SHORT).show()
     }
-
 
     enum class SortMode {
         NAME_ASC, NAME_DESC,
@@ -192,4 +291,6 @@ class MainActivity : AppCompatActivity() {
         QTY_ASC, QTY_DESC,
         FAVORITES_FIRST
     }
+
+    enum class BottomTab { HOME, CART, HISTORY, SETTINGS }
 }

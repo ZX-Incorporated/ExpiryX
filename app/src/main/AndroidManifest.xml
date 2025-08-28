@@ -3,9 +3,7 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- For Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- For Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
@@ -26,19 +24,27 @@
             </intent-filter>
         </activity>
 
+        <!-- Keyboard pans content (FAB + bottom bar not pushed up) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
 
+        <!-- Manual entry: keep form visible on keyboard -->
         <activity
             android:name=".ManualEntryActivity"
             android:exported="false"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
 
+        <!-- Scanner: true fullscreen, no status/nav bar -->
         <activity
             android:name=".BarcodeScannerActivity"
             android:exported="false"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.ExpiryX.Camera" />
+
     </application>
+
 </manifest>

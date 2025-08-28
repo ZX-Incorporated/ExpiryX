@@ -8,10 +8,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,6 +54,7 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
         val reminder: TextView = view.findViewById(R.id.txtDetailReminder)
         val btnDelete: Button = view.findViewById(R.id.btnDelete)
         val btnEdit: Button = view.findViewById(R.id.btnEdit)
+        val btnMarkAsUsed: Button = view.findViewById(R.id.btnMarkAsUsed)
 
         val p = product ?: return
 
@@ -73,64 +74,41 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
                     .error(R.drawable.ic_placeholder)
                     .into(img)
             }
-            else -> img.setImageResource(R.drawable.ic_carton_scan)
+            else -> img.setImageResource(R.drawable.ic_placeholder)
         }
 
         // --- Core fields ---
         name.text = p.name
-        // --- Memo / Notes ---
+
         if (!p.notes.isNullOrBlank()) {
-            notes.text = p.notes
             notes.visibility = View.VISIBLE
+            notes.text = p.notes
         } else {
             notes.visibility = View.GONE
         }
 
-
         expiry.text = "Expires on: " + (p.expirationDate?.let { formatDate(it) } ?: "N/A")
         qty.text = "Quantity: ${p.quantity}"
 
-        // --- Optional: Weight & Reminder ---
-        // If your Product already has these, assign them here.
-        // Otherwise we hide the rows so UI looks clean.
-        var weightShown = false
-        var reminderShown = false
-
-        // Try to read common field names via Java reflection (no kotlin-reflect dependency).
-        // If those fields don't exist in your Product, these will just fail silently and we'll hide the views.
-        runCatching {
-            val f = p.javaClass.getDeclaredField("weight")
-            f.isAccessible = true
-            val value = (f.get(p) as? String)?.takeIf { it.isNotBlank() }
-            if (value != null) {
-                weight.text = "Weight: $value"
-                weightShown = true
-            }
-        }
-        runCatching {
-            val f = p.javaClass.getDeclaredField("reminderDays")
-            f.isAccessible = true
-            val value = (f.get(p) as? Int)
-            if (value != null) {
-                reminder.text = "Reminder: $value day${if (value == 1) "" else "s"} before"
-                reminderShown = true
-            }
+        // Optional fields
+        if (!p.weight.isNullOrBlank()) {
+            weight.visibility = View.VISIBLE
+            weight.text = "Weight: ${p.weight}"
+        } else {
+            weight.visibility = View.GONE
         }
 
-        // hide if not present
-        weight.isVisible = weightShown
-        reminder.isVisible = reminderShown
-
-        val btnMarkAsUsed: Button = view.findViewById(R.id.btnMarkAsUsed)
+        if (p.reminderDays > 0) {
+            reminder.visibility = View.VISIBLE
+            reminder.text = "Reminder: ${p.reminderDays} day${if (p.reminderDays == 1) "" else "s"} before"
+        } else {
+            reminder.visibility = View.GONE
+        }
 
         btnMarkAsUsed.setOnClickListener {
-            product?.let { p ->
-                // Later: move product to history
-                (activity as? MainActivity)?.markProductAsUsed(p)
-            }
+            product?.let { pr -> (activity as? MainActivity)?.markProductAsUsed(pr) }
             dismiss()
         }
-
 
         // --- Actions ---
         btnDelete.setOnClickListener {
@@ -141,6 +119,19 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
         btnEdit.setOnClickListener {
             (activity as? MainActivity)?.editProduct(p)
             dismiss()
+        }
+    }
+
+    // --- ADDED: Make bottom sheet wrap content height ---
+    override fun onStart() {
+        super.onStart()
+        (dialog as? BottomSheetDialog)?.let { bottomSheetDialog ->
+            val bottomSheet = bottomSheetDialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            bottomSheet?.let {
+                val behavior = BottomSheetBehavior.from(it)
+                it.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
         }
     }
 

@@ -49,6 +49,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
+    implementation("androidx.fragment:fragment-ktx:1.8.4")
+// latest stable as of Aug 2025
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
