@@ -76,7 +76,6 @@ class ManualEntryActivity : AppCompatActivity() {
 
         selectedImageUri = intent.getStringExtra("imageUri") ?: editingProduct?.imageUri
 
-        // Prefill
         editingProduct?.let { product ->
             if (product.name.isNotBlank()) nameInput.setText(product.name)
             product.expirationDate?.let {
@@ -90,14 +89,12 @@ class ManualEntryActivity : AppCompatActivity() {
             favoriteCheck.isChecked = product.isFavorite
         }
 
-        // Load image
         if (!selectedImageUri.isNullOrBlank()) {
             Glide.with(this).load(Uri.parse(selectedImageUri)).into(imagePreview)
         } else {
             imagePreview.setImageResource(R.drawable.ic_placeholder)
         }
 
-        // Change/remove image
         imagePreview.setOnClickListener { pickImageLauncher.launch(arrayOf("image/*")) }
         imagePreview.setOnLongClickListener {
             selectedImageUri = null
@@ -109,8 +106,8 @@ class ManualEntryActivity : AppCompatActivity() {
         dateInput.setOnClickListener {
             val cal = Calendar.getInstance()
             DatePickerDialog(this, { _, y, m, d ->
-                cal.set(y, m, d, 0, 0, 0)
-                cal.set(Calendar.MILLISECOND, 0)
+                cal.set(y, m, d, 23, 59, 59) // end of day
+                cal.set(Calendar.MILLISECOND, 999)
                 expiryMillis = cal.timeInMillis
                 dateInput.setText(dateFormat.format(cal.time))
             }, cal[Calendar.YEAR], cal[Calendar.MONTH], cal[Calendar.DAY_OF_MONTH]).show()
@@ -128,7 +125,16 @@ class ManualEntryActivity : AppCompatActivity() {
                     dateInput.error = "Expiry date required"; return@setOnClickListener
                 }
                 try {
-                    dateFormat.parse(txt)?.time
+                    // Parse -> set to end-of-day for that date
+                    val parsed = dateFormat.parse(txt) ?: throw ParseException("Invalid", 0)
+                    val cal = Calendar.getInstance().apply {
+                        time = parsed
+                        set(Calendar.HOUR_OF_DAY, 23)
+                        set(Calendar.MINUTE, 59)
+                        set(Calendar.SECOND, 59)
+                        set(Calendar.MILLISECOND, 999)
+                    }
+                    cal.timeInMillis
                 } catch (_: ParseException) {
                     dateInput.error = "Invalid date (use dd/MM/yyyy)"
                     return@setOnClickListener

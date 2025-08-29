@@ -1,15 +1,20 @@
 package com.expiryx.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -39,9 +44,20 @@ class MainActivity : AppCompatActivity() {
     private var showFavoritesOnly = false
     private var sortMode = SortMode.EXPIRY_ASC
 
+    private val requestNotifPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                scheduleAllProductNotifications()
+            } else {
+                Toast.makeText(this, "Notifications disabled by user", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        NotificationUtils.createChannel(this)
 
         recyclerView = findViewById(R.id.recyclerProducts)
         emptyState = findViewById(R.id.emptyStateContainer)
@@ -59,7 +75,6 @@ class MainActivity : AppCompatActivity() {
 
         adapter = ProductAdapter(
             onFavoriteClick = { product ->
-                // Toggle in DB (and adapter does optimistic UI update too)
                 val updated = product.copy(isFavorite = !product.isFavorite)
                 productViewModel.update(updated)
             },
@@ -79,6 +94,9 @@ class MainActivity : AppCompatActivity() {
         productViewModel.allProducts.observe(this) { products ->
             allProducts = products
             refreshList()
+            checkAndMaybeRequestNotificationPermission()
+            // Schedule notifications for current list
+            scheduleAllProductNotifications()
         }
 
         // 🔍 Topbar Search button (icon stays unfilled always)
@@ -114,10 +132,8 @@ class MainActivity : AppCompatActivity() {
         val closeBtn = searchView.findViewById<ImageView>(closeBtnId)
         closeBtn?.setOnClickListener {
             if (!searchView.query.isNullOrEmpty()) {
-                // First clear the text
                 searchView.setQuery("", false)
             } else {
-                // Then fully hide the bar when already empty
                 closeSearchCompletely()
             }
         }
@@ -170,7 +186,6 @@ class MainActivity : AppCompatActivity() {
 
         // 🧭 Bottom nav clicks
         navHome.setOnClickListener {
-            // No popup here as requested; just keep home highlighted
             highlightBottomNav(BottomTab.HOME)
         }
         navCart.setOnClickListener {
@@ -186,8 +201,27 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Settings coming soon…", Toast.LENGTH_SHORT).show()
         }
 
-        // Highlight Home on start
         highlightBottomNav(BottomTab.HOME)
+    }
+
+    /** Notification permission (Android 13+) */
+    private fun checkAndMaybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!granted) {
+                requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    /** Schedule alarms for all products */
+    private fun scheduleAllProductNotifications() {
+        for (p in allProducts) {
+            NotificationScheduler.scheduleForProduct(this, p)
+        }
     }
 
     // --- Search helpers ---
@@ -201,7 +235,6 @@ class MainActivity : AppCompatActivity() {
         searchView.setQuery("", false)
         searchView.clearFocus()
         searchView.visibility = View.GONE
-        // list resets to whatever current filters/sort are
         refreshList()
     }
     // --- end search helpers ---
@@ -210,7 +243,7 @@ class MainActivity : AppCompatActivity() {
         when (tab) {
             BottomTab.HOME -> {
                 navHome.setImageResource(R.drawable.ic_home_filled)
-                navCart.setImageResource(R.drawable.ic_cart) // only 1 cart asset provided
+                navCart.setImageResource(R.drawable.ic_cart)
                 navHistory.setImageResource(R.drawable.ic_clock_unfilled)
                 navSettings.setImageResource(R.drawable.ic_settings_unfilled)
             }
@@ -230,7 +263,6 @@ class MainActivity : AppCompatActivity() {
                 navHome.setImageResource(R.drawable.ic_home_unfilled)
                 navCart.setImageResource(R.drawable.ic_cart)
                 navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-                // Your filled settings is named 'ic_setting_filled' (missing 's'); keeping unfilled to avoid mismatch
                 navSettings.setImageResource(R.drawable.ic_settings_unfilled)
             }
         }
@@ -268,7 +300,11 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Delete Product")
             .setMessage("Are you sure you want to delete ${product.name}?")
-            .setPositiveButton("Delete") { _, _ -> productViewModel.delete(product) }
+            .setPositiveButton("Delete") { _, _ ->
+                productViewModel.delete(product)
+                // Cancel scheduled notifications for this product
+                NotificationScheduler.cancelForProduct(this, product)
+            }
             .setNegativeButton("Cancel", null)
             .show()
     }
@@ -282,7 +318,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun markProductAsUsed(product: Product) {
+        // You might delete/move to history table
         Toast.makeText(this, "${product.name} marked as used", Toast.LENGTH_SHORT).show()
+        // Cancel alarms if you move/remove from active products
+        NotificationScheduler.cancelForProduct(this, product)
     }
 
     enum class SortMode {

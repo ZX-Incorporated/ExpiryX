@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import java.util.concurrent.TimeUnit
+import kotlin.math.floor
 
 sealed class ProductListItem {
     data class Header(val title: String, val colorRes: Int) : ProductListItem()
@@ -72,7 +74,6 @@ class ProductAdapter(
                     ContextCompat.getColor(h.itemView.context, item.colorRes)
                 )
             }
-
             is ProductListItem.ProductItem -> {
                 val h = holder as ProductViewHolder
                 val product = item.product
@@ -81,9 +82,7 @@ class ProductAdapter(
                 h.textProductNotes.text = product.notes ?: "No notes"
                 h.textProductQuantity.text = "Qty: ${product.quantity}"
 
-                // --- FAVORITE ICON (PNG, no tint, no stretch) ---
                 h.btnFavorite.scaleType = ImageView.ScaleType.CENTER_INSIDE
-                // ensure NO TINT from theme/material
                 ImageViewCompat.setImageTintList(h.btnFavorite, null)
                 h.btnFavorite.imageTintList = null
                 h.btnFavorite.setColorFilter(null)
@@ -92,11 +91,8 @@ class ProductAdapter(
                     if (product.isFavorite) R.drawable.ic_fav_filled
                     else R.drawable.ic_fav_unfilled
                 )
-
                 h.btnFavorite.setOnClickListener { onFavoriteClick(product) }
-                // -------------------------------------------------
 
-                // Image (remote/local/placeholder)
                 when {
                     !product.imageUri.isNullOrBlank() && product.imageUri.startsWith("http") -> {
                         Glide.with(h.itemView.context)
@@ -124,10 +120,18 @@ class ProductAdapter(
         }
     }
 
-    /** Build grouped list and submit to adapter */
+    /** Build grouped list based on day difference from today */
     fun updateData(products: List<Product>) {
         val grouped = mutableListOf<ProductListItem>()
         val now = System.currentTimeMillis()
+        val startToday = startOfDay(now)
+
+        fun dayDiff(expiryMillis: Long?): Long? {
+            expiryMillis ?: return null
+            val startExpiry = startOfDay(expiryMillis)
+            val diffMs = startExpiry - startToday
+            return floor(diffMs.toDouble() / DAY_MS).toLong()
+        }
 
         fun addGroup(title: String, colorRes: Int, condition: (Product) -> Boolean) {
             val filtered = products.filter(condition)
@@ -137,28 +141,44 @@ class ProductAdapter(
             }
         }
 
-        addGroup("Expired", R.color.red) { it.expirationDate != null && it.expirationDate < now }
-        addGroup("Expiring in 24 hours", R.color.orange) {
-            it.expirationDate != null && it.expirationDate in now..(now + DAY_MS)
+        addGroup("Expired", R.color.red) {
+            val d = dayDiff(it.expirationDate); d != null && d < 0
         }
-        addGroup("Expiring in 3 days", R.color.yellow) {
-            it.expirationDate != null && it.expirationDate in (now + DAY_MS + 1)..(now + 3 * DAY_MS)
+        addGroup("Expiring today", R.color.orange) {
+            val d = dayDiff(it.expirationDate); d != null && d == 0L
         }
-        addGroup("Expiring in 14 days", R.color.green) {
-            it.expirationDate != null && it.expirationDate in (now + 3 * DAY_MS + 1)..(now + 14 * DAY_MS)
+        addGroup("Expiring in 1 day", R.color.yellow) {
+            val d = dayDiff(it.expirationDate); d != null && d == 1L
         }
-        addGroup("Expiring in 3 months", R.color.blue) {
-            it.expirationDate != null && it.expirationDate in (now + 14 * DAY_MS + 1)..(now + 90L * DAY_MS)
+        addGroup("Expiring in 3 days", R.color.green) {
+            val d = dayDiff(it.expirationDate); d != null && d in 2L..3L
         }
-        addGroup("Expiring in 3–12 months", R.color.teal_200) {
-            it.expirationDate != null && it.expirationDate in (now + 90L * DAY_MS + 1)..(now + 365L * DAY_MS - 1)
+        addGroup("Expiring in 14 days", R.color.blue) {
+            val d = dayDiff(it.expirationDate); d != null && d in 4L..14L
         }
-        addGroup("Expiring in 1 year or more", R.color.purple) {
-            it.expirationDate != null && it.expirationDate >= (now + 365L * DAY_MS)
+        addGroup("Expiring in 3 months", R.color.teal_200) {
+            val d = dayDiff(it.expirationDate); d != null && d in 15L..90L
+        }
+        addGroup("Expiring in 3–12 months", R.color.purple) {
+            val d = dayDiff(it.expirationDate); d != null && d in 91L..365L
+        }
+        addGroup("Expiring in 1 year or more", R.color.gray) {
+            val d = dayDiff(it.expirationDate); d != null && d > 365L
         }
         addGroup("No expiry set", R.color.gray) { it.expirationDate == null }
 
         submitList(grouped)
+    }
+
+    private fun startOfDay(ts: Long): Long {
+        val cal = java.util.Calendar.getInstance().apply {
+            timeInMillis = ts
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        return cal.timeInMillis
     }
 }
 

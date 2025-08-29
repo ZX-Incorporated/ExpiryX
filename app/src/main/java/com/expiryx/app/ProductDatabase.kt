@@ -7,8 +7,8 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Product::class],
-    version = 1,
-    exportSchema = false
+    version = 2, // bumped from 1 → 2 because schema changed
+    exportSchema = true
 )
 abstract class ProductDatabase : RoomDatabase() {
 
@@ -25,12 +25,12 @@ abstract class ProductDatabase : RoomDatabase() {
                     ProductDatabase::class.java,
                     "product_database"
                 )
-                    .fallbackToDestructiveMigration()   // 👈 add this line
+                    // During development: auto-wipe on schema mismatch
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
             }
         }
-
     }
 }
