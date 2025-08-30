@@ -16,5 +16,6 @@ data class Product(
     val notes: String? = null,
     val weight: String? = null,
     val imageUri: String? = null,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val isUsed: Boolean = false // ✅ NEW FIELD
 ) : Parcelable

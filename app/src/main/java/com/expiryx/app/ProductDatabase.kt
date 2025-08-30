@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Product::class],
-    version = 2, // bumped from 1 → 2 because schema changed
+    version = 1, // bumped from 1 → 2 because schema changed
     exportSchema = true
 )
 abstract class ProductDatabase : RoomDatabase() {

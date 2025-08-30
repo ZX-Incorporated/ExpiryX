@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.PopupMenu
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -27,6 +28,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyState: View
+    private lateinit var emptyImage: ImageView
+    private lateinit var emptyTitle: TextView
+    private lateinit var emptySubtitle: TextView
     private lateinit var addButton: FloatingActionButton
     private lateinit var adapter: ProductAdapter
     private lateinit var searchView: SearchView
@@ -61,6 +65,9 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recyclerProducts)
         emptyState = findViewById(R.id.emptyStateContainer)
+        emptyImage = findViewById(R.id.emptyStateImage)
+        emptyTitle = findViewById(R.id.emptyStateTitle)
+        emptySubtitle = findViewById(R.id.emptyStateSubtitle)
         addButton = findViewById(R.id.btnAddProduct)
         searchView = findViewById(R.id.searchView)
         btnSearch = findViewById(R.id.btnSearch)
@@ -95,11 +102,10 @@ class MainActivity : AppCompatActivity() {
             allProducts = products
             refreshList()
             checkAndMaybeRequestNotificationPermission()
-            // Schedule notifications for current list
             scheduleAllProductNotifications()
         }
 
-        // 🔍 Topbar Search button (icon stays unfilled always)
+        // 🔍 Topbar Search button
         btnSearch.setOnClickListener {
             if (searchView.visibility == View.VISIBLE) {
                 closeSearchCompletely()
@@ -115,19 +121,17 @@ class MainActivity : AppCompatActivity() {
                 val filtered = if (!newText.isNullOrBlank()) {
                     allProducts.filter { it.name.contains(newText, ignoreCase = true) }
                 } else allProducts
-                updateList(filtered)
+                updateList(filtered, fromSearch = !newText.isNullOrBlank())
                 return true
             }
         })
 
-        // When focus leaves & query empty -> hide the whole search bar
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (!hasFocus && searchView.query.isNullOrEmpty()) {
                 closeSearchCompletely()
             }
         }
 
-        // Force the X close button to completely hide the SearchView if query already empty
         val closeBtnId = androidx.appcompat.R.id.search_close_btn
         val closeBtn = searchView.findViewById<ImageView>(closeBtnId)
         closeBtn?.setOnClickListener {
@@ -174,7 +178,7 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
 
-        // ❤️ Toggle favorites filter (top bar heart)
+        // ❤️ Toggle favorites filter
         btnFavorite.setOnClickListener {
             showFavoritesOnly = !showFavoritesOnly
             btnFavorite.setImageResource(
@@ -186,7 +190,6 @@ class MainActivity : AppCompatActivity() {
 
         // 🧭 Bottom nav clicks
         navHome.setOnClickListener {
-            // already here; just ensure highlight
             highlightBottomNav(BottomTab.HOME)
         }
         navCart.setOnClickListener {
@@ -197,7 +200,7 @@ class MainActivity : AppCompatActivity() {
             if (this !is HistoryActivity) {
                 startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
                 overridePendingTransition(0, 0)
-                finish() // keep a single activity in stack per tab
+                finish()
             }
         }
         navSettings.setOnClickListener {
@@ -289,13 +292,41 @@ class MainActivity : AppCompatActivity() {
             SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite }
         }
 
-        updateList(list)
+        val isSearching = !searchView.query.isNullOrEmpty()
+        updateList(list, fromSearch = isSearching)
     }
 
-    private fun updateList(products: List<Product>) {
+    private fun updateList(products: List<Product>, fromSearch: Boolean = false) {
         if (products.isEmpty()) {
             recyclerView.visibility = View.GONE
             emptyState.visibility = View.VISIBLE
+
+            when {
+                allProducts.isEmpty() -> {
+                    // no products at all
+                    emptyImage.setImageResource(R.drawable.ic_carton_scan)
+                    emptyTitle.text = "Scan Your First Product"
+                    emptySubtitle.text = "To get started, scan a food item or enter the details manually."
+                }
+                showFavoritesOnly -> {
+                    // no favorites
+                    emptyImage.setImageResource(R.drawable.ic_favorites_empty)
+                    emptyTitle.text = "No favorites yet"
+                    emptySubtitle.text = "Mark products as favorite to quickly find them here."
+                }
+                fromSearch -> {
+                    // no search results
+                    emptyImage.setImageResource(R.drawable.ic_search_empty)
+                    emptyTitle.text = "No results found"
+                    emptySubtitle.text = "Try adjusting your search or scanning a new product."
+                }
+                else -> {
+                    // fallback
+                    emptyImage.setImageResource(R.drawable.ic_carton_scan)
+                    emptyTitle.text = "Nothing here"
+                    emptySubtitle.text = "Start adding products to see them here."
+                }
+            }
         } else {
             recyclerView.visibility = View.VISIBLE
             emptyState.visibility = View.GONE
@@ -309,7 +340,6 @@ class MainActivity : AppCompatActivity() {
             .setMessage("Are you sure you want to delete ${product.name}?")
             .setPositiveButton("Delete") { _, _ ->
                 productViewModel.delete(product)
-                // Cancel scheduled notifications for this product
                 NotificationScheduler.cancelForProduct(this, product)
             }
             .setNegativeButton("Cancel", null)
@@ -325,9 +355,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun markProductAsUsed(product: Product) {
-        // You might delete/move to history table
         Toast.makeText(this, "${product.name} marked as used", Toast.LENGTH_SHORT).show()
-        // Cancel alarms if you move/remove from active products
         NotificationScheduler.cancelForProduct(this, product)
     }
 
