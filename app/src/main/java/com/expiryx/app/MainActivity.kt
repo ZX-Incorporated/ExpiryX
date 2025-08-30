@@ -193,9 +193,11 @@ class MainActivity : AppCompatActivity() {
             highlightBottomNav(BottomTab.HOME)
         }
         navCart.setOnClickListener {
-            highlightBottomNav(BottomTab.CART)
             Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
+            // Keep the current highlight (likely Home)
+            highlightBottomNav(BottomTab.HOME)
         }
+
         navHistory.setOnClickListener {
             if (this !is HistoryActivity) {
                 startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
