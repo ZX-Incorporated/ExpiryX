@@ -40,6 +40,20 @@
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustPan|stateHidden" />
 
+        <!-- History (empty for now) -->
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+
+        <!-- Settings (empty for now) -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+
         <!-- Manual Entry -->
         <activity
             android:name=".ManualEntryActivity"

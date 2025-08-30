@@ -186,6 +186,7 @@ class MainActivity : AppCompatActivity() {
 
         // 🧭 Bottom nav clicks
         navHome.setOnClickListener {
+            // already here; just ensure highlight
             highlightBottomNav(BottomTab.HOME)
         }
         navCart.setOnClickListener {
@@ -193,12 +194,18 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
         }
         navHistory.setOnClickListener {
-            highlightBottomNav(BottomTab.HISTORY)
-            Toast.makeText(this, "History coming soon…", Toast.LENGTH_SHORT).show()
+            if (this !is HistoryActivity) {
+                startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                overridePendingTransition(0, 0)
+                finish() // keep a single activity in stack per tab
+            }
         }
         navSettings.setOnClickListener {
-            highlightBottomNav(BottomTab.SETTINGS)
-            Toast.makeText(this, "Settings coming soon…", Toast.LENGTH_SHORT).show()
+            if (this !is SettingsActivity) {
+                startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+                overridePendingTransition(0, 0)
+                finish()
+            }
         }
 
         highlightBottomNav(BottomTab.HOME)
@@ -239,7 +246,7 @@ class MainActivity : AppCompatActivity() {
     }
     // --- end search helpers ---
 
-    private fun highlightBottomNav(tab: BottomTab) {
+    protected fun highlightBottomNav(tab: BottomTab) {
         when (tab) {
             BottomTab.HOME -> {
                 navHome.setImageResource(R.drawable.ic_home_filled)
@@ -263,7 +270,7 @@ class MainActivity : AppCompatActivity() {
                 navHome.setImageResource(R.drawable.ic_home_unfilled)
                 navCart.setImageResource(R.drawable.ic_cart)
                 navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+                navSettings.setImageResource(R.drawable.ic_settings_filled)
             }
         }
     }
