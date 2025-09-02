@@ -69,7 +69,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_profile"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -103,7 +103,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_privacy_lock"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -141,7 +141,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_dark_mode"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -182,7 +182,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_notifications"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -220,7 +220,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_info"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -263,7 +263,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_export"
-                            android:tint="@android:color/black"/>
+                            app:tint="@android:color/black"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -317,7 +317,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_home_unfilled"
-                    android:tint="@android:color/black"
+                    app:tint="@android:color/black"
                     android:contentDescription="Home"/>
 
                 <TextView
@@ -341,7 +341,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_cart"
-                    android:tint="@android:color/black"
+                    app:tint="@android:color/black"
                     android:contentDescription="Store"/>
 
                 <TextView
@@ -365,7 +365,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_clock_unfilled"
-                    android:tint="@android:color/black"
+                    app:tint="@android:color/black"
                     android:contentDescription="History"/>
 
                 <TextView
@@ -389,7 +389,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_settings_unfilled"
-                    android:tint="@android:color/black"
+                    app:tint="@android:color/black"
                     android:contentDescription="Settings"/>
 
                 <TextView
