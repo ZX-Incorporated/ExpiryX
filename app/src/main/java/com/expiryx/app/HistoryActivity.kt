@@ -299,10 +299,31 @@ class HistoryActivity : AppCompatActivity() {
         if (hasResults) {
             binding.recyclerHistory.visibility = View.VISIBLE
             binding.historyPlaceholder.visibility = View.GONE
+            binding.historyNoResults.visibility = View.GONE
+            binding.historyNoFavourites.visibility = View.GONE
         } else {
             binding.recyclerHistory.visibility = View.GONE
-            binding.historyPlaceholder.visibility = View.VISIBLE
+
+            // Pick correct placeholder
+            when {
+                searchQuery.isNotEmpty() -> {
+                    binding.historyNoResults.visibility = View.VISIBLE
+                    binding.historyPlaceholder.visibility = View.GONE
+                    binding.historyNoFavourites.visibility = View.GONE
+                }
+                onlyFavourites -> {
+                    binding.historyNoFavourites.visibility = View.VISIBLE
+                    binding.historyPlaceholder.visibility = View.GONE
+                    binding.historyNoResults.visibility = View.GONE
+                }
+                else -> {
+                    binding.historyPlaceholder.visibility = View.VISIBLE
+                    binding.historyNoResults.visibility = View.GONE
+                    binding.historyNoFavourites.visibility = View.GONE
+                }
+            }
         }
+
 
         if (!isSearching) {
             val expiredCount = fullList.count { it.action == "Expired" }
