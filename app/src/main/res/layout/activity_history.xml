@@ -28,6 +28,17 @@
             android:textColor="@android:color/black"/>
     </LinearLayout>
 
+    <!-- RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerHistory"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topBar"
+        android:layout_above="@id/bottomNavWrapper"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        android:visibility="gone" />
+
     <!-- Placeholder content -->
     <LinearLayout
         android:id="@+id/historyPlaceholder"
@@ -37,7 +48,8 @@
         android:layout_above="@id/bottomNavWrapper"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="24dp"
+        android:visibility="gone">
 
         <ImageView
             android:layout_width="120dp"
@@ -55,7 +67,7 @@
             android:textColor="@android:color/black"/>
     </LinearLayout>
 
-    <!-- Bottom Navigation (identical IDs for wiring) -->
+    <!-- Bottom Navigation (same as other screens) -->
     <LinearLayout
         android:id="@+id/bottomNavWrapper"
         android:layout_width="match_parent"
@@ -80,6 +92,7 @@
             android:paddingHorizontal="4dp"
             android:paddingTop="4dp">
 
+            <!-- Home -->
             <LinearLayout
                 android:id="@+id/navHomeWrapper"
                 android:layout_width="0dp"
@@ -103,6 +116,7 @@
                     android:textColor="@android:color/black"/>
             </LinearLayout>
 
+            <!-- Store -->
             <LinearLayout
                 android:id="@+id/navCartWrapper"
                 android:layout_width="0dp"
@@ -126,6 +140,7 @@
                     android:textColor="@android:color/black"/>
             </LinearLayout>
 
+            <!-- History -->
             <LinearLayout
                 android:id="@+id/navHistoryWrapper"
                 android:layout_width="0dp"
@@ -138,7 +153,7 @@
                     android:id="@+id/navHistory"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_clock_unfilled"
+                    android:src="@drawable/ic_clock_filled"
                     android:contentDescription="History" />
 
                 <TextView
@@ -149,6 +164,7 @@
                     android:textColor="@android:color/black"/>
             </LinearLayout>
 
+            <!-- Settings -->
             <LinearLayout
                 android:id="@+id/navSettingsWrapper"
                 android:layout_width="0dp"
@@ -173,5 +189,4 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </RelativeLayout>

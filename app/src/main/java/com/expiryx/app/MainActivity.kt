@@ -63,6 +63,9 @@ class MainActivity : AppCompatActivity() {
 
         NotificationUtils.createChannel(this)
 
+        // ✅ Archive expired products into history at launch
+        productViewModel.archiveExpiredProducts()
+
         recyclerView = findViewById(R.id.recyclerProducts)
         emptyState = findViewById(R.id.emptyStateContainer)
         emptyImage = findViewById(R.id.emptyStateImage)
@@ -105,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             scheduleAllProductNotifications()
         }
 
-        // 🔍 Topbar Search button
+        // 🔍 Search button toggle
         btnSearch.setOnClickListener {
             if (searchView.visibility == View.VISIBLE) {
                 closeSearchCompletely()
@@ -114,7 +117,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 🔍 Search callbacks
+        // 🔍 Search input listeners
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -132,6 +135,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Clear search button
         val closeBtnId = androidx.appcompat.R.id.search_close_btn
         val closeBtn = searchView.findViewById<ImageView>(closeBtnId)
         closeBtn?.setOnClickListener {
@@ -178,7 +182,7 @@ class MainActivity : AppCompatActivity() {
             popup.show()
         }
 
-        // ❤️ Toggle favorites filter
+        // ❤️ Favorites toggle
         btnFavorite.setOnClickListener {
             showFavoritesOnly = !showFavoritesOnly
             btnFavorite.setImageResource(
@@ -188,29 +192,23 @@ class MainActivity : AppCompatActivity() {
             refreshList()
         }
 
-        // 🧭 Bottom nav clicks
+        // 🧭 Bottom nav
         navHome.setOnClickListener {
             highlightBottomNav(BottomTab.HOME)
         }
         navCart.setOnClickListener {
             Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
-            // Keep the current highlight (likely Home)
             highlightBottomNav(BottomTab.HOME)
         }
-
         navHistory.setOnClickListener {
-            if (this !is HistoryActivity) {
-                startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
-                overridePendingTransition(0, 0)
-                finish()
-            }
+            startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
         }
         navSettings.setOnClickListener {
-            if (this !is SettingsActivity) {
-                startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
-                overridePendingTransition(0, 0)
-                finish()
-            }
+            startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
         }
 
         highlightBottomNav(BottomTab.HOME)
@@ -222,7 +220,6 @@ class MainActivity : AppCompatActivity() {
             val granted = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-
             if (!granted) {
                 requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
@@ -249,7 +246,6 @@ class MainActivity : AppCompatActivity() {
         searchView.visibility = View.GONE
         refreshList()
     }
-    // --- end search helpers ---
 
     protected fun highlightBottomNav(tab: BottomTab) {
         when (tab) {
@@ -305,25 +301,21 @@ class MainActivity : AppCompatActivity() {
 
             when {
                 allProducts.isEmpty() -> {
-                    // no products at all
                     emptyImage.setImageResource(R.drawable.ic_carton_scan)
                     emptyTitle.text = "Scan Your First Product"
                     emptySubtitle.text = "To get started, scan a food item or enter the details manually."
                 }
                 showFavoritesOnly -> {
-                    // no favorites
                     emptyImage.setImageResource(R.drawable.ic_favorites_empty)
                     emptyTitle.text = "No favorites yet"
                     emptySubtitle.text = "Mark products as favorite to quickly find them here."
                 }
                 fromSearch -> {
-                    // no search results
                     emptyImage.setImageResource(R.drawable.ic_search_empty)
                     emptyTitle.text = "No results found"
                     emptySubtitle.text = "Try adjusting your search or scanning a new product."
                 }
                 else -> {
-                    // fallback
                     emptyImage.setImageResource(R.drawable.ic_carton_scan)
                     emptyTitle.text = "Nothing here"
                     emptySubtitle.text = "Start adding products to see them here."

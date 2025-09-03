@@ -2,9 +2,14 @@ package com.expiryx.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class HistoryActivity : AppCompatActivity() {
 
@@ -12,6 +17,14 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var navCart: ImageView
     private lateinit var navHistory: ImageView
     private lateinit var navSettings: ImageView
+
+    private lateinit var recyclerHistory: RecyclerView
+    private lateinit var placeholder: LinearLayout
+
+    private val viewModel: ProductViewModel by viewModels {
+        ProductViewModelFactory((application as ProductApplication).repository)
+    }
+    private lateinit var adapter: HistoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +34,8 @@ class HistoryActivity : AppCompatActivity() {
         navCart = findViewById(R.id.navCart)
         navHistory = findViewById(R.id.navHistory)
         navSettings = findViewById(R.id.navSettings)
+        recyclerHistory = findViewById(R.id.recyclerHistory)
+        placeholder = findViewById(R.id.historyPlaceholder)
 
         // highlight current tab
         navHome.setImageResource(R.drawable.ic_home_unfilled)
@@ -28,12 +43,28 @@ class HistoryActivity : AppCompatActivity() {
         navHistory.setImageResource(R.drawable.ic_clock_filled)
         navSettings.setImageResource(R.drawable.ic_settings_unfilled)
 
-        navHome.setOnClickListener {
-            if (this !is MainActivity) {
-                startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
-                overridePendingTransition(0, 0)
-                finish()
+        // setup RecyclerView
+        adapter = HistoryAdapter(emptyList())
+        recyclerHistory.layoutManager = LinearLayoutManager(this)
+        recyclerHistory.adapter = adapter
+
+        // Observe history list
+        viewModel.allHistory.observe(this) { list ->
+            if (list.isNullOrEmpty()) {
+                recyclerHistory.visibility = View.GONE
+                placeholder.visibility = View.VISIBLE
+            } else {
+                adapter.updateData(list)
+                recyclerHistory.visibility = View.VISIBLE
+                placeholder.visibility = View.GONE
             }
+        }
+
+        // bottom nav wiring
+        navHome.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
         }
         navCart.setOnClickListener {
             Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
@@ -42,11 +73,9 @@ class HistoryActivity : AppCompatActivity() {
             // already here
         }
         navSettings.setOnClickListener {
-            if (this !is SettingsActivity) {
-                startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
-                overridePendingTransition(0, 0)
-                finish()
-            }
+            startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
         }
     }
 }
