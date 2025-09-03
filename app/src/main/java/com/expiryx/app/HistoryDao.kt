@@ -17,4 +17,8 @@ interface HistoryDao {
     // ✅ move this here (was wrongly in ProductDao)
     @Query("SELECT * FROM history_table WHERE productId = :productId AND action = :action LIMIT 1")
     suspend fun findByProductAndAction(productId: Int, action: String): History?
+
+    @Query("SELECT * FROM history_table ORDER BY timestamp DESC")
+    suspend fun getAllHistoryNow(): List<History>
+
 }

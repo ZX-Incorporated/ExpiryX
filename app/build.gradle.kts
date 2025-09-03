@@ -15,10 +15,14 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0-alpha" // version shown in Settings
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // FIX: wrap in provider so Gradle evaluates properly
+        resValue("string", "app_version_name", versionName ?: "unknown")
     }
+
 
     buildTypes {
         release {
@@ -43,6 +47,8 @@ android {
     }
 }
 
+
+
 dependencies {
     // AndroidX core UI
     implementation("androidx.core:core-ktx:1.13.1")
@@ -64,7 +70,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
 
-    // WorkManager (for robust notifications)
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Glide
@@ -87,9 +93,11 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Apache POI (Excel export)
+
+
     // Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    // app/build.gradle.kts (add inside dependencies)
 }

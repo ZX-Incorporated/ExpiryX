@@ -24,5 +24,7 @@ interface ProductDao {
     // ✅ synchronous list query
     @Query("SELECT * FROM product_table ORDER BY expirationDate ASC")
     suspend fun getAllProductsNow(): List<Product>
+
+
 }
 

@@ -22,7 +22,7 @@ class ProductRepository(
         historyDao.insert(history)
     }
 
-    // Delete product → optional "Deleted" log (can remove if not needed)
+    // Delete product → optional "Deleted" log
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
         historyDao.insert(
@@ -35,7 +35,7 @@ class ProductRepository(
                 notes = product.notes,
                 imageUri = product.imageUri,
                 isFavorite = product.isFavorite,
-                action = "Deleted", // ❓ remove this if you only want Used/Expired
+                action = "Deleted",
                 timestamp = System.currentTimeMillis()
             )
         )
@@ -93,5 +93,7 @@ class ProductRepository(
         }
     }
 
+    // ✅ Expose sync queries for SettingsActivity
     suspend fun getAllProductsNow(): List<Product> = productDao.getAllProductsNow()
+    suspend fun getAllHistoryNow(): List<History> = historyDao.getAllHistoryNow()
 }
