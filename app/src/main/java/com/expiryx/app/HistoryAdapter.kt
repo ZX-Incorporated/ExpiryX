@@ -1,19 +1,23 @@
-// app/src/main/java/com/expiryx/app/HistoryAdapter.kt
 package com.expiryx.app
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HistoryAdapter(private var items: List<History>) :
     RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     class HistoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val txtName: TextView = view.findViewById(R.id.textHistoryProduct)
-        val txtAction: TextView = view.findViewById(R.id.textHistoryAction)
-        val txtDate: TextView = view.findViewById(R.id.textHistoryDate)
+        val imageHistoryProduct: ImageView = view.findViewById(R.id.imageHistoryProduct)
+        val textHistoryProduct: TextView = view.findViewById(R.id.textHistoryProduct)
+        val textHistoryAction: TextView = view.findViewById(R.id.textHistoryAction)
+        val textHistoryDate: TextView = view.findViewById(R.id.textHistoryDate)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
@@ -24,13 +28,23 @@ class HistoryAdapter(private var items: List<History>) :
 
     override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
         val item = items[position]
-        holder.txtName.text = item.productName
-        holder.txtAction.text = item.action
-        holder.txtDate.text = android.text.format.DateFormat.format("dd/MM/yyyy HH:mm", item.timestamp)
+
+        holder.textHistoryProduct.text = item.productName
+        holder.textHistoryAction.text = item.action
+
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        holder.textHistoryDate.text = sdf.format(Date(item.timestamp))
+
+        Glide.with(holder.imageHistoryProduct.context)
+            .load(item.imageUri)
+            .placeholder(R.drawable.ic_placeholder)
+            .error(R.drawable.ic_placeholder)
+            .into(holder.imageHistoryProduct)
     }
 
     override fun getItemCount(): Int = items.size
 
+    // ✅ Renamed to match HistoryActivity
     fun updateData(newItems: List<History>) {
         items = newItems
         notifyDataSetChanged()

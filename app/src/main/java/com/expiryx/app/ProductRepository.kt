@@ -12,14 +12,18 @@ class ProductRepository(
 
     suspend fun insertProduct(product: Product) {
         productDao.insert(product)
-        // ✅ Log history on save
         historyDao.insert(
             History(
+                productId = product.id,
                 productName = product.name,
-                action = "Added",
-                timestamp = System.currentTimeMillis(),
+                expirationDate = product.expirationDate,
                 quantity = product.quantity,
-                weight = product.weight
+                weight = product.weight,
+                notes = product.notes,
+                imageUri = product.imageUri,
+                isFavorite = product.isFavorite,
+                action = "Added",
+                timestamp = System.currentTimeMillis()
             )
         )
     }
@@ -36,34 +40,42 @@ class ProductRepository(
         productDao.delete(product)
         historyDao.insert(
             History(
+                productId = product.id,
                 productName = product.name,
-                action = "Deleted",
-                timestamp = System.currentTimeMillis(),
+                expirationDate = product.expirationDate,
                 quantity = product.quantity,
-                weight = product.weight
+                weight = product.weight,
+                notes = product.notes,
+                imageUri = product.imageUri,
+                isFavorite = product.isFavorite,
+                action = "Deleted",
+                timestamp = System.currentTimeMillis()
             )
         )
     }
 
     suspend fun markAsUsed(product: Product) {
-        productDao.delete(product) // remove from active list
+        productDao.delete(product)
         historyDao.insert(
             History(
+                productId = product.id,
                 productName = product.name,
-                action = "Used",
-                timestamp = System.currentTimeMillis(),
+                expirationDate = product.expirationDate,
                 quantity = product.quantity,
-                weight = product.weight
+                weight = product.weight,
+                notes = product.notes,
+                imageUri = product.imageUri,
+                isFavorite = product.isFavorite,
+                action = "Used",
+                timestamp = System.currentTimeMillis()
             )
         )
     }
 
-    // Called at app start to auto-move expired items
     suspend fun archiveExpiredProducts() {
         val now = System.currentTimeMillis()
         val sevenDaysMs = 7 * 24 * 60 * 60 * 1000L
 
-        // ✅ now suspend call, runs off main thread automatically
         val products = productDao.getAllProductsNow()
 
         products.forEach { product ->
@@ -72,17 +84,21 @@ class ProductRepository(
                 productDao.delete(product)
                 historyDao.insert(
                     History(
+                        productId = product.id,
                         productName = product.name,
-                        action = "Expired",
-                        timestamp = System.currentTimeMillis(),
+                        expirationDate = product.expirationDate,
                         quantity = product.quantity,
-                        weight = product.weight
+                        weight = product.weight,
+                        notes = product.notes,
+                        imageUri = product.imageUri,
+                        isFavorite = product.isFavorite,
+                        action = "Expired",
+                        timestamp = System.currentTimeMillis()
                     )
                 )
             }
         }
     }
-
 
     suspend fun getAllProductsNow(): List<Product> = productDao.getAllProductsNow()
 }

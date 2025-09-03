@@ -1,4 +1,3 @@
-// app/src/main/java/com/expiryx/app/HistoryDao.kt
 package com.expiryx.app
 
 import androidx.lifecycle.LiveData

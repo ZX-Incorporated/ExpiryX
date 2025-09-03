@@ -1,32 +1,55 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:layout_marginVertical="4dp"
+    android:background="@drawable/product_tile_background"
     android:padding="12dp"
-    android:background="?attr/selectableItemBackground">
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/textHistoryProduct"
-        android:layout_width="wrap_content"
+    <!-- Texts (left) -->
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Product Name"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:textColor="@android:color/black" />
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textHistoryAction"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Action: Used"
-        android:textSize="14sp"
-        android:textColor="#555" />
+        <TextView
+            android:id="@+id/textHistoryProduct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Product Name"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@android:color/black" />
 
-    <TextView
-        android:id="@+id/textHistoryDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="01/09/2025 14:22"
-        android:textSize="12sp"
-        android:textColor="#777" />
+        <TextView
+            android:id="@+id/textHistoryAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Expired"
+            android:textSize="14sp"
+            android:textColor="#555555" />
+
+        <TextView
+            android:id="@+id/textHistoryDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="01/09/2025 14:30"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray" />
+    </LinearLayout>
+
+    <!-- Product image (right side) -->
+    <ImageView
+        android:id="@+id/imageHistoryProduct"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/rounded_image_bg"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_placeholder"
+        android:contentDescription="Product image" />
 </LinearLayout>
