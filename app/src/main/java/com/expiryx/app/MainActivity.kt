@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSortBy: ImageView
     private lateinit var btnFavorite: ImageView
 
-    // bottom nav icons
+    // bottom nav
     private lateinit var navHome: ImageView
     private lateinit var navCart: ImageView
     private lateinit var navHistory: ImageView
@@ -50,11 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private val requestNotifPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                scheduleAllProductNotifications()
-            } else {
-                Toast.makeText(this, "Notifications disabled by user", Toast.LENGTH_SHORT).show()
-            }
+            if (granted) scheduleAllProductNotifications()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 
         NotificationUtils.createChannel(this)
 
-        // ✅ Archive expired products into history at launch
+        // ✅ Archive 7+ day expired products at launch
         productViewModel.archiveExpiredProducts()
 
         recyclerView = findViewById(R.id.recyclerProducts)
@@ -77,47 +73,32 @@ class MainActivity : AppCompatActivity() {
         btnSortBy = findViewById(R.id.btnSortBy)
         btnFavorite = findViewById(R.id.btnFavorite)
 
-        // bottom nav
         navHome = findViewById(R.id.navHome)
         navCart = findViewById(R.id.navCart)
         navHistory = findViewById(R.id.navHistory)
         navSettings = findViewById(R.id.navSettings)
 
         adapter = ProductAdapter(
-            onFavoriteClick = { product ->
-                val updated = product.copy(isFavorite = !product.isFavorite)
-                productViewModel.update(updated)
-            },
-            onItemClick = { product ->
-                val bottomSheet = ProductDetailBottomSheet.newInstance(product)
-                bottomSheet.show(supportFragmentManager, "ProductDetailBottomSheet")
-            },
-            onDeleteLongPress = { product ->
-                deleteProductWithConfirmation(product)
-            }
+            onFavoriteClick = { p -> productViewModel.update(p.copy(isFavorite = !p.isFavorite)) },
+            onItemClick = { p -> ProductDetailBottomSheet.newInstance(p).show(supportFragmentManager, "Detail") },
+            onDeleteLongPress = { deleteProductWithConfirmation(it) }
         )
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // Observe products from DB
         productViewModel.allProducts.observe(this) { products ->
             allProducts = products
             refreshList()
             checkAndMaybeRequestNotificationPermission()
             scheduleAllProductNotifications()
+            productViewModel.archiveExpiredProducts() // ✅ also check every refresh
         }
 
-        // 🔍 Search button toggle
         btnSearch.setOnClickListener {
-            if (searchView.visibility == View.VISIBLE) {
-                closeSearchCompletely()
-            } else {
-                openSearch()
-            }
+            if (searchView.visibility == View.VISIBLE) closeSearchCompletely() else openSearch()
         }
 
-        // 🔍 Search input listeners
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -130,38 +111,28 @@ class MainActivity : AppCompatActivity() {
         })
 
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && searchView.query.isNullOrEmpty()) {
-                closeSearchCompletely()
-            }
+            if (!hasFocus && searchView.query.isNullOrEmpty()) closeSearchCompletely()
         }
 
-        // Clear search button
-        val closeBtnId = androidx.appcompat.R.id.search_close_btn
-        val closeBtn = searchView.findViewById<ImageView>(closeBtnId)
+        val closeBtn = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
         closeBtn?.setOnClickListener {
-            if (!searchView.query.isNullOrEmpty()) {
-                searchView.setQuery("", false)
-            } else {
-                closeSearchCompletely()
-            }
+            if (!searchView.query.isNullOrEmpty()) searchView.setQuery("", false)
+            else closeSearchCompletely()
         }
 
-        // ➕ Add product
         addButton.setOnClickListener {
-            val bottomSheet = AddProductBottomSheet()
-            bottomSheet.show(supportFragmentManager, "AddProductBottomSheet")
+            AddProductBottomSheet().show(supportFragmentManager, "AddProduct")
         }
 
-        // 🔀 Sort menu
         btnSortBy.setOnClickListener { v ->
             val popup = PopupMenu(this, v)
             popup.menu.apply {
-                add(0, 1, 0, "Expiry Date (Soonest First)")
-                add(0, 2, 0, "Expiry Date (Latest First)")
-                add(0, 3, 0, "Name (A–Z)")
-                add(0, 4, 0, "Name (Z–A)")
-                add(0, 5, 0, "Quantity (Low → High)")
-                add(0, 6, 0, "Quantity (High → Low)")
+                add(0, 1, 0, "Expiry Soonest")
+                add(0, 2, 0, "Expiry Latest")
+                add(0, 3, 0, "Name A–Z")
+                add(0, 4, 0, "Name Z–A")
+                add(0, 5, 0, "Quantity Low→High")
+                add(0, 6, 0, "Quantity High→Low")
                 add(0, 7, 0, "Favorites First")
             }
             popup.setOnMenuItemClickListener { item ->
@@ -176,30 +147,19 @@ class MainActivity : AppCompatActivity() {
                     else -> SortMode.EXPIRY_ASC
                 }
                 refreshList()
-                Toast.makeText(this, "Sorted by ${item.title}", Toast.LENGTH_SHORT).show()
                 true
             }
             popup.show()
         }
 
-        // ❤️ Favorites toggle
         btnFavorite.setOnClickListener {
             showFavoritesOnly = !showFavoritesOnly
-            btnFavorite.setImageResource(
-                if (showFavoritesOnly) R.drawable.ic_heart_filled
-                else R.drawable.ic_heart_unfilled
-            )
+            btnFavorite.setImageResource(if (showFavoritesOnly) R.drawable.ic_heart_filled else R.drawable.ic_heart_unfilled)
             refreshList()
         }
 
-        // 🧭 Bottom nav
-        navHome.setOnClickListener {
-            highlightBottomNav(BottomTab.HOME)
-        }
-        navCart.setOnClickListener {
-            Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
-            highlightBottomNav(BottomTab.HOME)
-        }
+        navHome.setOnClickListener { highlightBottomNav(BottomTab.HOME) }
+        navCart.setOnClickListener { Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show() }
         navHistory.setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
             overridePendingTransition(0, 0)
@@ -214,26 +174,19 @@ class MainActivity : AppCompatActivity() {
         highlightBottomNav(BottomTab.HOME)
     }
 
-    /** Notification permission (Android 13+) */
     private fun checkAndMaybeRequestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
                 this, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-            if (!granted) {
-                requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+            if (!granted) requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
-    /** Schedule alarms for all products */
     private fun scheduleAllProductNotifications() {
-        for (p in allProducts) {
-            NotificationScheduler.scheduleForProduct(this, p)
-        }
+        for (p in allProducts) NotificationScheduler.scheduleForProduct(this, p)
     }
 
-    // --- Search helpers ---
     private fun openSearch() {
         searchView.visibility = View.VISIBLE
         searchView.isIconified = false
@@ -248,32 +201,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     protected fun highlightBottomNav(tab: BottomTab) {
-        when (tab) {
-            BottomTab.HOME -> {
-                navHome.setImageResource(R.drawable.ic_home_filled)
-                navCart.setImageResource(R.drawable.ic_cart)
-                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
-            }
-            BottomTab.CART -> {
-                navHome.setImageResource(R.drawable.ic_home_unfilled)
-                navCart.setImageResource(R.drawable.ic_cart)
-                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
-            }
-            BottomTab.HISTORY -> {
-                navHome.setImageResource(R.drawable.ic_home_unfilled)
-                navCart.setImageResource(R.drawable.ic_cart)
-                navHistory.setImageResource(R.drawable.ic_clock_filled)
-                navSettings.setImageResource(R.drawable.ic_settings_unfilled)
-            }
-            BottomTab.SETTINGS -> {
-                navHome.setImageResource(R.drawable.ic_home_unfilled)
-                navCart.setImageResource(R.drawable.ic_cart)
-                navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-                navSettings.setImageResource(R.drawable.ic_settings_filled)
-            }
-        }
+        navHome.setImageResource(if (tab == BottomTab.HOME) R.drawable.ic_home_filled else R.drawable.ic_home_unfilled)
+        navHistory.setImageResource(if (tab == BottomTab.HISTORY) R.drawable.ic_clock_filled else R.drawable.ic_clock_unfilled)
+        navSettings.setImageResource(if (tab == BottomTab.SETTINGS) R.drawable.ic_settings_filled else R.drawable.ic_settings_unfilled)
+        navCart.setImageResource(R.drawable.ic_cart)
     }
 
     private fun refreshList() {
@@ -298,29 +229,6 @@ class MainActivity : AppCompatActivity() {
         if (products.isEmpty()) {
             recyclerView.visibility = View.GONE
             emptyState.visibility = View.VISIBLE
-
-            when {
-                allProducts.isEmpty() -> {
-                    emptyImage.setImageResource(R.drawable.ic_carton_scan)
-                    emptyTitle.text = "Scan Your First Product"
-                    emptySubtitle.text = "To get started, scan a food item or enter the details manually."
-                }
-                showFavoritesOnly -> {
-                    emptyImage.setImageResource(R.drawable.ic_favorites_empty)
-                    emptyTitle.text = "No favorites yet"
-                    emptySubtitle.text = "Mark products as favorite to quickly find them here."
-                }
-                fromSearch -> {
-                    emptyImage.setImageResource(R.drawable.ic_search_empty)
-                    emptyTitle.text = "No results found"
-                    emptySubtitle.text = "Try adjusting your search or scanning a new product."
-                }
-                else -> {
-                    emptyImage.setImageResource(R.drawable.ic_carton_scan)
-                    emptyTitle.text = "Nothing here"
-                    emptySubtitle.text = "Start adding products to see them here."
-                }
-            }
         } else {
             recyclerView.visibility = View.VISIBLE
             emptyState.visibility = View.GONE
@@ -349,16 +257,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun markProductAsUsed(product: Product) {
-        Toast.makeText(this, "${product.name} marked as used", Toast.LENGTH_SHORT).show()
+        productViewModel.markAsUsed(product) // ✅ moves to history instantly
         NotificationScheduler.cancelForProduct(this, product)
+        Toast.makeText(this, "${product.name} moved to history (Used)", Toast.LENGTH_SHORT).show()
     }
 
-    enum class SortMode {
-        NAME_ASC, NAME_DESC,
-        EXPIRY_ASC, EXPIRY_DESC,
-        QTY_ASC, QTY_DESC,
-        FAVORITES_FIRST
-    }
-
+    enum class SortMode { NAME_ASC, NAME_DESC, EXPIRY_ASC, EXPIRY_DESC, QTY_ASC, QTY_DESC, FAVORITES_FIRST }
     enum class BottomTab { HOME, CART, HISTORY, SETTINGS }
 }

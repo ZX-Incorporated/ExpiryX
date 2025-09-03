@@ -6,7 +6,6 @@ import androidx.room.*
 
 @Dao
 interface ProductDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(product: Product)
 
@@ -22,7 +21,8 @@ interface ProductDao {
     @Query("SELECT * FROM product_table WHERE isFavorite = 1 ORDER BY expirationDate ASC")
     fun getFavoriteProducts(): LiveData<List<Product>>
 
-    // ✅ synchronous list query for repository (must be suspend!)
+    // ✅ synchronous list query
     @Query("SELECT * FROM product_table ORDER BY expirationDate ASC")
     suspend fun getAllProductsNow(): List<Product>
 }
+

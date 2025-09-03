@@ -1,4 +1,3 @@
-// app/src/main/java/com/expiryx/app/ProductRepository.kt
 package com.expiryx.app
 
 import androidx.lifecycle.LiveData
@@ -10,22 +9,9 @@ class ProductRepository(
     val allProducts: LiveData<List<Product>> = productDao.getAllProducts()
     val allHistory: LiveData<List<History>> = historyDao.getAllHistory()
 
+    // Insert product WITHOUT creating "Added" history
     suspend fun insertProduct(product: Product) {
         productDao.insert(product)
-        historyDao.insert(
-            History(
-                productId = product.id,
-                productName = product.name,
-                expirationDate = product.expirationDate,
-                quantity = product.quantity,
-                weight = product.weight,
-                notes = product.notes,
-                imageUri = product.imageUri,
-                isFavorite = product.isFavorite,
-                action = "Added",
-                timestamp = System.currentTimeMillis()
-            )
-        )
     }
 
     suspend fun update(product: Product) {
@@ -36,6 +22,7 @@ class ProductRepository(
         historyDao.insert(history)
     }
 
+    // Delete product → optional "Deleted" log (can remove if not needed)
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
         historyDao.insert(
@@ -48,54 +35,60 @@ class ProductRepository(
                 notes = product.notes,
                 imageUri = product.imageUri,
                 isFavorite = product.isFavorite,
-                action = "Deleted",
+                action = "Deleted", // ❓ remove this if you only want Used/Expired
                 timestamp = System.currentTimeMillis()
             )
         )
     }
 
+    // Mark product as used → History: "Used"
     suspend fun markAsUsed(product: Product) {
-        productDao.delete(product)
-        historyDao.insert(
-            History(
-                productId = product.id,
-                productName = product.name,
-                expirationDate = product.expirationDate,
-                quantity = product.quantity,
-                weight = product.weight,
-                notes = product.notes,
-                imageUri = product.imageUri,
-                isFavorite = product.isFavorite,
-                action = "Used",
-                timestamp = System.currentTimeMillis()
+        val existing = historyDao.findByProductAndAction(product.id, "Used")
+        if (existing == null) {
+            historyDao.insert(
+                History(
+                    productId = product.id,
+                    productName = product.name,
+                    expirationDate = product.expirationDate,
+                    quantity = product.quantity,
+                    weight = product.weight,
+                    notes = product.notes,
+                    imageUri = product.imageUri,
+                    isFavorite = product.isFavorite,
+                    action = "Used",
+                    timestamp = System.currentTimeMillis()
+                )
             )
-        )
+        }
+        productDao.delete(product)
     }
 
+    // Archive products expired > 7 days → History: "Expired"
     suspend fun archiveExpiredProducts() {
         val now = System.currentTimeMillis()
-        val sevenDaysMs = 7 * 24 * 60 * 60 * 1000L
+        val all = productDao.getAllProductsNow()
 
-        val products = productDao.getAllProductsNow()
-
-        products.forEach { product ->
-            val expiry = product.expirationDate ?: return@forEach
-            if (now - expiry >= sevenDaysMs) {
-                productDao.delete(product)
-                historyDao.insert(
-                    History(
-                        productId = product.id,
-                        productName = product.name,
-                        expirationDate = product.expirationDate,
-                        quantity = product.quantity,
-                        weight = product.weight,
-                        notes = product.notes,
-                        imageUri = product.imageUri,
-                        isFavorite = product.isFavorite,
-                        action = "Expired",
-                        timestamp = System.currentTimeMillis()
+        for (p in all) {
+            val expiry = p.expirationDate ?: continue
+            if (now - expiry >= 7 * 24 * 60 * 60 * 1000) {
+                val existing = historyDao.findByProductAndAction(p.id, "Expired")
+                if (existing == null) {
+                    historyDao.insert(
+                        History(
+                            productId = p.id,
+                            productName = p.name,
+                            expirationDate = p.expirationDate,
+                            quantity = p.quantity,
+                            weight = p.weight,
+                            notes = p.notes,
+                            imageUri = p.imageUri,
+                            isFavorite = p.isFavorite,
+                            action = "Expired",
+                            timestamp = now
+                        )
                     )
-                )
+                }
+                productDao.delete(p)
             }
         }
     }
