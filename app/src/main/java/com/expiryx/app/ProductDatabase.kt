@@ -1,3 +1,4 @@
+// app/src/main/java/com/expiryx/app/ProductDatabase.kt
 package com.expiryx.app
 
 import android.content.Context
@@ -6,13 +7,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Product::class],
-    version = 1, // bumped from 1 → 2 because schema changed
-    exportSchema = true
+    entities = [Product::class, History::class], // ✅ include History
+    version = 2,                                 // ✅ bump version
+    exportSchema = false
 )
 abstract class ProductDatabase : RoomDatabase() {
 
     abstract fun productDao(): ProductDao
+    abstract fun historyDao(): HistoryDao
 
     companion object {
         @Volatile
@@ -25,7 +27,6 @@ abstract class ProductDatabase : RoomDatabase() {
                     ProductDatabase::class.java,
                     "product_database"
                 )
-                    // During development: auto-wipe on schema mismatch
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- History sort: Added vs Expired logic -->
+    <string-array name="history_sort_options">
+        <item>Added (Newest first)</item>
+        <item>Added (Oldest first)</item>
+        <item>Expired first</item>
+        <item>By product name</item>
+    </string-array>
+
+    <!-- Action filter chips -->
+    <string-array name="history_action_filters">
+        <item>All</item>
+        <item>Expired</item>
+        <item>Used</item>
+        <item>Deleted</item>
+    </string-array>
+</resources>

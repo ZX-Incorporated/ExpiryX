@@ -1,8 +1,11 @@
+// app/src/main/java/com/expiryx/app/ProductApplication.kt
 package com.expiryx.app
 
 import android.app.Application
 
 class ProductApplication : Application() {
     val database: ProductDatabase by lazy { ProductDatabase.getDatabase(this) }
-    val repository: ProductRepository by lazy { ProductRepository(database.productDao()) }
+    val repository: ProductRepository by lazy {
+        ProductRepository(database.productDao(), database.historyDao())
+    }
 }
