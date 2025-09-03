@@ -27,6 +27,12 @@ class HistoryActivity : AppCompatActivity() {
     private var sortIndex: Int = 0
     private var searchQuery: String = ""
 
+    private var showExpired = true
+    private var showConsumed = true
+    private var showDeleted = true
+    private var onlyFavourites = false
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHistoryBinding.inflate(layoutInflater)
@@ -45,7 +51,9 @@ class HistoryActivity : AppCompatActivity() {
 
         setupSearch()
         setupSort()
+        setupFilter()   // <-- missing
         setupBottomNav()
+
 
         // observe data
         viewModel.allHistory.observe(this) { list ->
@@ -173,10 +181,77 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
-    // ---------- FILTERS & SORT ----------
-    private fun applyFilters() {
-        var filtered = fullList
 
+    // ---------- FILTERS & SORT ----------
+
+    private fun setupFilter() {
+        binding.btnFilter.setOnClickListener { v ->
+            val popup = PopupMenu(this, v)
+            popup.menuInflater.inflate(R.menu.menu_filter_history, popup.menu)
+
+            // reflect current state
+            popup.menu.findItem(R.id.filter_expired).isChecked = showExpired
+            popup.menu.findItem(R.id.filter_consumed).isChecked = showConsumed
+            popup.menu.findItem(R.id.filter_deleted).isChecked = showDeleted
+            popup.menu.findItem(R.id.filter_favourites).isChecked = onlyFavourites
+
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.filter_expired -> {
+                        if (!(showConsumed || showDeleted)) {
+                            Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
+                        } else {
+                            showExpired = !showExpired
+                            item.isChecked = showExpired
+                            applyFilters()
+                        }
+                    }
+                    R.id.filter_consumed -> {
+                        if (!(showExpired || showDeleted)) {
+                            Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
+                        } else {
+                            showConsumed = !showConsumed
+                            item.isChecked = showConsumed
+                            applyFilters()
+                        }
+                    }
+                    R.id.filter_deleted -> {
+                        if (!(showExpired || showConsumed)) {
+                            Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
+                        } else {
+                            showDeleted = !showDeleted
+                            item.isChecked = showDeleted
+                            applyFilters()
+                        }
+                    }
+                    R.id.filter_favourites -> {
+                        onlyFavourites = !onlyFavourites
+                        item.isChecked = onlyFavourites
+                        applyFilters()
+                    }
+                }
+                true
+            }
+            popup.show()
+        }
+    }
+
+    private fun applyFilters() {
+        var filtered = fullList.distinctBy { it.productId to it.action to it.timestamp }
+
+        // Type filter
+        filtered = filtered.filter { h ->
+            (h.action == "Expired" && showExpired) ||
+                    (h.action == "Used" && showConsumed) ||
+                    (h.action == "Deleted" && showDeleted)
+        }
+
+        // Favourites filter
+        if (onlyFavourites) {
+            filtered = filtered.filter { it.isFavorite }
+        }
+
+        // Search filter
         if (searchQuery.isNotBlank()) {
             val q = searchQuery.trim()
             val qLower = q.lowercase(Locale.getDefault())
@@ -193,6 +268,7 @@ class HistoryActivity : AppCompatActivity() {
             }
         }
 
+        // Sorting (unchanged)
         filtered = when (sortIndex) {
             0 -> filtered.sortedByDescending { it.timestamp }
             1 -> filtered.sortedBy { it.timestamp }
@@ -209,13 +285,14 @@ class HistoryActivity : AppCompatActivity() {
         updateUI(filtered)
     }
 
+
+
     private fun updateUI(list: List<History>) {
         adapter.updateData(list)
 
         val isSearching = searchQuery.isNotEmpty()
         val hasResults = list.isNotEmpty()
 
-        // Hide counters + sort row while searching
         binding.countersLayout.visibility = if (isSearching) View.GONE else View.VISIBLE
         binding.layoutSortHistory.root.visibility = if (isSearching) View.GONE else View.VISIBLE
 
@@ -230,11 +307,14 @@ class HistoryActivity : AppCompatActivity() {
         if (!isSearching) {
             val expiredCount = fullList.count { it.action == "Expired" }
             val usedCount = fullList.count { it.action == "Used" }
+            val deletedCount = fullList.count { it.action == "Deleted" }
 
             binding.textExpiredCount.text = "$expiredCount Expired"
             binding.textConsumedCount.text = "$usedCount Consumed"
+            binding.textDeletedCount.text = "$deletedCount Deleted"
         }
     }
+
 
     // ---------- Helpers ----------
     private fun formatDate(millis: Long): String {

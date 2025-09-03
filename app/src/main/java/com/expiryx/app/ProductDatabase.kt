@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Product::class, History::class], // ✅ include History
-    version = 2,                                 // ✅ bump version
+    version = 1,                                 // ✅ bump version
     exportSchema = false
 )
 abstract class ProductDatabase : RoomDatabase() {

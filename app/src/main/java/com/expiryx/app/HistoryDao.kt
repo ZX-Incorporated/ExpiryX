@@ -8,13 +8,13 @@ import androidx.room.Query
 
 @Dao
 interface HistoryDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(history: History)
 
     @Query("SELECT * FROM history_table ORDER BY timestamp DESC")
     fun getAllHistory(): LiveData<List<History>>
 
-    @Query("DELETE FROM history_table")
-    suspend fun clearAll()
+    // ✅ move this here (was wrongly in ProductDao)
+    @Query("SELECT * FROM history_table WHERE productId = :productId AND action = :action LIMIT 1")
+    suspend fun findByProductAndAction(productId: Int, action: String): History?
 }

@@ -7,17 +7,16 @@ import androidx.room.PrimaryKey
 data class History(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
 
-    // Core product info
-    val productId: Int? = null, // optional reference back to original product
+    val productId: Int? = null,
     val productName: String,
-    val expirationDate: Long?,   // same as Product.expirationDate
+    val expirationDate: Long?,
     val quantity: Int = 1,
     val weight: String? = null,
     val notes: String? = null,
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
 
-    // Action meta
-    val action: String,          // "Added", "Deleted", "Used", "Expired"
-    val timestamp: Long          // when action happened
+    // Allowed actions: "Expired", "Used" (and optionally "Deleted")
+    val action: String,
+    val timestamp: Long
 )

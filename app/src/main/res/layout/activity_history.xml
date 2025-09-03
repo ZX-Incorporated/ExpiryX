@@ -32,11 +32,21 @@
             android:layout_weight="1" />
 
         <ImageView
+            android:id="@+id/btnFilter"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_filter"
+            android:contentDescription="Filter"
+            android:layout_marginEnd="16dp" />
+
+        <ImageView
             android:id="@+id/btnSearch"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_search_unfilled"
             android:contentDescription="Search" />
+
+
     </LinearLayout>
 
     <!-- Search bar (appears below top bar) -->
@@ -84,8 +94,21 @@
             android:textStyle="bold"
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
+            android:layout_marginEnd="8dp"
             android:background="@drawable/pill_used_bg" />
+
+        <TextView
+            android:id="@+id/textDeletedCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 Deleted"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:background="@drawable/pill_deleted_bg" />
     </LinearLayout>
+
 
     <!-- Sort dropdown row -->
     <include
