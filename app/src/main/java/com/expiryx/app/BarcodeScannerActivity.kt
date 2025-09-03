@@ -4,49 +4,64 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class BarcodeScannerActivity : AppCompatActivity() {
 
     private lateinit var previewView: PreviewView
+    private lateinit var progressBar: ProgressBar
     private lateinit var cameraExecutor: ExecutorService
     private var cameraProvider: ProcessCameraProvider? = null
-
-    // Gate to ensure we handle the scan **only once**
+    private var analysis: ImageAnalysis? = null
     private val handled = AtomicBoolean(false)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val cameraPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) startCamera()
-        else Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+        else {
+            Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
-
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_barcode_scanner)
 
         previewView = findViewById(R.id.previewView)
+        // IMPORTANT: this must exist in activity_barcode_scanner.xml
+        progressBar = findViewById(R.id.progressBarScan)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -58,39 +73,44 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    private fun setLoading(loading: Boolean) {
+        progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+    }
+
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
+            try {
+                cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-
-            val analysis = ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-
-            // ML Kit scanner setup (restrict to common retail formats)
-            val options = BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(
-                    Barcode.FORMAT_EAN_13,
-                    Barcode.FORMAT_EAN_8,
-                    Barcode.FORMAT_UPC_A,
-                    Barcode.FORMAT_UPC_E
-                )
-                .build()
-            val scanner = BarcodeScanning.getClient(options)
-
-            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                // Do nothing if we already handled one
-                if (handled.get()) {
-                    imageProxy.close()
-                    return@setAnalyzer
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
-                val mediaImage = imageProxy.image
-                if (mediaImage != null) {
+                analysis = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+
+                val options = BarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(
+                        com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                        com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
+                        com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                        com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_E
+                    )
+                    .build()
+                val scanner = BarcodeScanning.getClient(options)
+
+                analysis?.setAnalyzer(cameraExecutor) { imageProxy ->
+                    if (handled.get()) {
+                        imageProxy.close()
+                        return@setAnalyzer
+                    }
+                    val mediaImage = imageProxy.image ?: run {
+                        imageProxy.close()
+                        return@setAnalyzer
+                    }
+
                     val image = InputImage.fromMediaImage(
                         mediaImage,
                         imageProxy.imageInfo.rotationDegrees
@@ -98,32 +118,33 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
                     scanner.process(image)
                         .addOnSuccessListener { barcodes ->
-                            if (handled.get()) {
-                                imageProxy.close()
-                                return@addOnSuccessListener
-                            }
-
-                            // Take the first valid barcode only
                             val candidate = barcodes.firstOrNull { bc ->
                                 val v = bc.rawValue
                                 v != null && v.all { it.isDigit() } && v.length in 8..14
                             }?.rawValue
 
-                            if (candidate != null) {
-                                onBarcodeDetected(candidate)
+                            if (candidate != null && handled.compareAndSet(false, true)) {
+                                runOnUiThread {
+                                    setLoading(true)
+                                    Toast.makeText(
+                                        this,
+                                        "Barcode detected, loading…",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                try {
+                                    cameraProvider?.unbindAll()
+                                } catch (_: Exception) {}
+                                fetchProductInfo(candidate)
                             }
                             imageProxy.close()
                         }
                         .addOnFailureListener { e ->
-                            Log.e("BarcodeScanner", "Barcode scan failed", e)
+                            Log.e("BarcodeScanner", "Scan failed", e)
                             imageProxy.close()
                         }
-                } else {
-                    imageProxy.close()
                 }
-            }
 
-            try {
                 cameraProvider?.unbindAll()
                 cameraProvider?.bindToLifecycle(
                     this,
@@ -137,73 +158,86 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun onBarcodeDetected(barcode: String) {
-        // Ensure we run this exactly once
-        if (!handled.compareAndSet(false, true)) return
-
-        // Stop camera immediately
-        cameraProvider?.unbindAll()
-
-        fetchProductInfo(barcode)
-    }
-
     private fun fetchProductInfo(barcode: String) {
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .callTimeout(15, TimeUnit.SECONDS)
+            .build()
         val request = Request.Builder()
             .url("https://world.openfoodfacts.org/api/v0/product/$barcode.json")
             .build()
 
         ioScope.launch {
             try {
-                val response = client.newCall(request).execute()
-                val body = response.body?.string()
+                val body = client.newCall(request).execute().use { resp ->
+                    if (!resp.isSuccessful) null else resp.body?.string()
+                }
+
+                withContext(Dispatchers.Main) { setLoading(false) }
+
                 if (body != null) {
                     val json = JSONObject(body)
                     val status = json.optInt("status", 0)
                     if (status == 1) {
                         val productJson = json.getJSONObject("product")
-                        val name = productJson.optString("product_name", "Unknown Product")
-                        val quantity = 1
-                        val notes = productJson.optString("brands", "")
-                        val weight = productJson.optString("quantity", "")
+                        val name = productJson.optString("product_name", "").trim()
+                        val notes = productJson.optString("brands", "").takeIf { it.isNotBlank() }
+                        val weight = productJson.optString("quantity", "").takeIf { it.isNotBlank() }
+                        val imageUrl = productJson.optString("image_url", null)
 
                         val product = Product(
                             id = 0,
                             name = name,
                             expirationDate = null,
-                            quantity = quantity,
+                            quantity = 1,
                             reminderDays = 0,
                             notes = notes,
                             weight = weight,
-                            imageUri = productJson.optString("image_url", null),
+                            imageUri = imageUrl,
                             isFavorite = false
                         )
 
                         withContext(Dispatchers.Main) {
-                            val intent = Intent(this@BarcodeScannerActivity, ManualEntryActivity::class.java).apply {
+                            val intent = Intent(
+                                this@BarcodeScannerActivity,
+                                ManualEntryActivity::class.java
+                            ).apply {
                                 putExtra("product", product)
-                                // ❌ DO NOT set "isEdit" → this makes it an INSERT
+                                putExtra("isEdit", false)
                             }
                             startActivity(intent)
-                            finish() // ✅ prevents duplicate launches
+                            Handler(Looper.getMainLooper()).post { finish() }
                         }
-
                     } else {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@BarcodeScannerActivity, "Product not found", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@BarcodeScannerActivity,
+                                "Product not found.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             finish()
                         }
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@BarcodeScannerActivity, "Empty response", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@BarcodeScannerActivity,
+                            "Empty response.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                 }
             } catch (e: Exception) {
-                Log.e("BarcodeScanner", "API request failed", e)
+                Log.e("BarcodeScanner", "API failed", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@BarcodeScannerActivity, "Error fetching product info", Toast.LENGTH_SHORT).show()
+                    setLoading(false)
+                    Toast.makeText(
+                        this@BarcodeScannerActivity,
+                        "Error fetching product info",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     finish()
                 }
             }
@@ -212,6 +246,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            analysis?.clearAnalyzer()
+            cameraProvider?.unbindAll()
+        } catch (_: Exception) {}
         cameraExecutor.shutdown()
         ioScope.cancel()
     }

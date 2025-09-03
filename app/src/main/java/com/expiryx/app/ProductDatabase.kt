@@ -5,8 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Product::class], version = 3, exportSchema = false) // 🆕 bumped version
+@Database(
+    entities = [Product::class],
+    version = 1, // bumped from 1 → 2 because schema changed
+    exportSchema = true
+)
 abstract class ProductDatabase : RoomDatabase() {
+
     abstract fun productDao(): ProductDao
 
     companion object {
@@ -20,7 +25,8 @@ abstract class ProductDatabase : RoomDatabase() {
                     ProductDatabase::class.java,
                     "product_database"
                 )
-                    .fallbackToDestructiveMigration() // ⚠️ wipes old DB on upgrade
+                    // During development: auto-wipe on schema mismatch
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

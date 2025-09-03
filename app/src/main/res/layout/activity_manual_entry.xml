@@ -1,114 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp"
-    android:background="@android:color/white">
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+    <ScrollView
+        android:id="@+id/manualScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:fillViewport="true">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manual Entry"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:paddingBottom="16dp"/>
-
-        <ImageView
-            android:id="@+id/imageProductPreview"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="8dp"
-            android:src="@drawable/ic_placeholder"/>
-
-        <EditText
-            android:id="@+id/editTextProductName"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Product Name"
-            android:padding="12dp"
-            android:background="@drawable/edit_text_background"/>
+            android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/editTextExpirationDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Expiration Date (dd/MM/yyyy)"
-            android:padding="12dp"
-            android:focusable="false"
-            android:clickable="true"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/edit_text_background"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manual Entry"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:paddingBottom="16dp"/>
 
-        <EditText
-            android:id="@+id/editTextQuantity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Quantity"
-            android:inputType="number"
-            android:padding="12dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/edit_text_background"/>
+            <ImageView
+                android:id="@+id/imageProductPreview"
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                android:background="@drawable/rounded_image_bg"
+                android:src="@drawable/ic_placeholder"
+                android:contentDescription="Product image preview" />
 
-        <EditText
-            android:id="@+id/editTextReminder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Reminder Period (days before expiry)"
-            android:inputType="number"
-            android:padding="12dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/edit_text_background"/>
+            <EditText
+                android:id="@+id/editTextProductName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Product Name"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"
+                android:imeOptions="actionNext" />
 
-        <EditText
-            android:id="@+id/editTextWeight"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Product Weight (e.g. 500g)"
-            android:padding="12dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/edit_text_background"/>
+            <EditText
+                android:id="@+id/editTextExpirationDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Expiration Date (dd/MM/yyyy)"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"
+                android:focusable="false"
+                android:clickable="true" />
 
-        <EditText
-            android:id="@+id/editTextNotes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Optional Notes"
-            android:inputType="textMultiLine"
-            android:minLines="3"
-            android:padding="12dp"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/edit_text_background"/>
+            <EditText
+                android:id="@+id/editTextQuantity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Quantity"
+                android:inputType="number"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"/>
 
-        <CheckBox
-            android:id="@+id/checkboxFavorite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mark as Favorite"
-            android:layout_marginTop="12dp"/>
+            <EditText
+                android:id="@+id/editTextReminder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Reminder Period (days before expiry)"
+                android:inputType="number"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"/>
 
-        <Button
-            android:id="@+id/buttonSaveProduct"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Save Product"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="@color/teal_200"
-            android:textColor="@android:color/white"/>
+            <EditText
+                android:id="@+id/editTextWeight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Product Weight (e.g. 500g)"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"/>
 
-        <Button
-            android:id="@+id/buttonCancel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Cancel"
-            android:layout_marginTop="12dp"
-            android:backgroundTint="@android:color/holo_red_dark"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
-</ScrollView>
+            <EditText
+                android:id="@+id/editTextNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Optional Notes"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:background="@drawable/edit_text_background"
+                android:padding="14dp"/>
+
+            <CheckBox
+                android:id="@+id/checkboxFavorite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mark as Favorite"
+                android:layout_marginTop="12dp"/>
+
+            <Button
+                android:id="@+id/buttonSaveProduct"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Product"
+                android:textAllCaps="false"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@android:color/white"/>
+
+            <Button
+                android:id="@+id/buttonCancel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                android:textAllCaps="false"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@android:color/holo_red_dark"
+                android:textColor="@android:color/white"/>
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

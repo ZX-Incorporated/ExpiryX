@@ -8,9 +8,9 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Add these two lines for the login screen -->
-    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_200">#FF03DAC5</color>``
     <color name="teal_700">#FF018786</color>
-
+    <color name="your_teal_color">#00897B</color> <color name="your_teal_color_light">#E0F2F1</color> <color name="settings_card_border">#E0E0E0</color>
         <color name="red">#F44336</color>
         <color name="orange">#FF9800</color>
         <color name="yellow">#FFEB3B</color>
@@ -24,6 +24,14 @@
 
         <color name="gradient_overlay_start">#33FF4081</color>
         <color name="gradient_overlay_center">#66FF4081</color>
+    <color name="header_expired">#D32F2F</color>
+    <color name="header_today">#F57C00</color>
+    <color name="header_soon">#FBC02D</color>
+    <color name="header_later">#388E3C</color>
+
+    <color name="gray">#9E9E9E</color>
+
+
 
 
 </resources>

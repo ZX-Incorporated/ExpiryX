@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/header_background"
+        android:elevation="2dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/titleSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+
+    <!-- Scrollable settings content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/topBar"
+        android:layout_above="@id/bottomNavWrapper"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:paddingTop="8dp"
+                android:text="ACCOUNT" />
+
+            <!-- Profile -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/profile_card"
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/profile_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4"> <!-- Aqua -->
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_profile"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/profile_icon_container"
+                        android:layout_alignParentEnd="true">
+
+                        <TextView style="@style/SettingsTitle" android:text="Profile" />
+                        <TextView style="@style/SettingsSubtitle" android:text="Edit your personal details" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Privacy -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/privacy_card"
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/privacy_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_privacy_lock"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/privacy_icon_container"
+                        android:layout_alignParentEnd="true">
+
+                        <TextView style="@style/SettingsTitle" android:text="Privacy" />
+                        <TextView style="@style/SettingsSubtitle" android:text="Manage password &amp; security" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:paddingTop="8dp"
+                android:text="PREFERENCES" />
+
+            <!-- Dark mode -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/dark_mode_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_dark_mode"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/dark_mode_icon_container"
+                        android:layout_toStartOf="@+id/dark_mode_switch">
+
+                        <TextView style="@style/SettingsTitle" android:text="Dark Mode" />
+                        <TextView style="@style/SettingsSubtitle" android:text="Switch between light &amp; dark" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/dark_mode_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"/>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Notifications -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/notifications_card"
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/notifications_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_notifications"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/notifications_icon_container"
+                        android:layout_alignParentEnd="true">
+
+                        <TextView style="@style/SettingsTitle" android:text="Notifications" />
+                        <TextView style="@style/SettingsSubtitle" android:text="Push notification settings" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:paddingTop="8dp"
+                android:text="ABOUT" />
+
+            <!-- App version -->
+            <com.google.android.material.card.MaterialCardView
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/app_version_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_info"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/app_version_icon_container"
+                        android:layout_toStartOf="@+id/app_version_text">
+
+                        <TextView style="@style/SettingsTitle" android:text="App Version" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/app_version_text"
+                        style="@style/SettingsSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:text="v1.0.0"/>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Export Data -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/export_card"
+                style="@style/SettingsCard"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:id="@+id/export_icon_container"
+                        style="@style/SettingsIconContainer"
+                        android:backgroundTint="#00BCD4">
+
+                        <ImageView
+                            style="@style/SettingsIcon"
+                            android:src="@drawable/ic_export"
+                            app:tint="@android:color/black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SettingsTextLayout"
+                        android:layout_toEndOf="@id/export_icon_container"
+                        android:layout_alignParentEnd="true">
+
+                        <TextView style="@style/SettingsTitle" android:text="Export Data" />
+                        <TextView style="@style/SettingsSubtitle" android:text="Download your stored data" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom nav (fixed, no duplicate) -->
+    <LinearLayout
+        android:id="@+id/bottomNavWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:elevation="6dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"/>
+
+        <LinearLayout
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="4"
+            android:paddingHorizontal="4dp"
+            android:paddingTop="4dp">
+
+            <LinearLayout
+                android:id="@+id/navHomeWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navHome"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_home_unfilled"
+                    app:tint="@android:color/black"
+                    android:contentDescription="Home"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navCartWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navCart"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_cart"
+                    app:tint="@android:color/black"
+                    android:contentDescription="Store"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Store"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navHistoryWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navHistory"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_clock_unfilled"
+                    app:tint="@android:color/black"
+                    android:contentDescription="History"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="History"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navSettingsWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navSettings"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_settings_unfilled"
+                    app:tint="@android:color/black"
+                    android:contentDescription="Settings"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

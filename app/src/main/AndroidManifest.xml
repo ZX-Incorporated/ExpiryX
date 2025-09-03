@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permissions -->
+    <!-- Camera & Media -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- For Android 12 and below -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- For Android 13+ -->
+    <!-- Before Android 13 -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <!-- Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Notifications Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Reschedule on reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".ProductApplication"
@@ -17,35 +23,60 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpiryX">
 
+        <!-- Login launcher -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
+        <!-- Main UI -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
 
-        <activity
-            android:name=".ManualEntryActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-
-        <activity
-            android:name=".BarcodeScannerActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-
-        <!-- 🆕 Add this for your History screen -->
+        <!-- History (empty for now) -->
         <activity
             android:name=".HistoryActivity"
             android:exported="false"
-            android:label="History" />
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+
+        <!-- Settings (empty for now) -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+
+        <!-- Manual Entry -->
+        <activity
+            android:name=".ManualEntryActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+
+        <!-- Scanner -->
+        <activity
+            android:name=".BarcodeScannerActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.ExpiryX.Camera" />
+
+        <!-- Boot-time sweeping & (re)scheduling -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

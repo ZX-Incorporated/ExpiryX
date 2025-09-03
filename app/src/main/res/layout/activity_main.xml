@@ -1,23 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
 
     <!-- Top bar -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/header_background"
+        android:elevation="2dp"
+        android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/btnSortBy"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_sort"
             android:contentDescription="Sort By" />
 
@@ -25,8 +30,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sort By"
-            android:textColor="#000000"
-            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"
             android:layout_marginStart="6dp" />
 
         <View
@@ -36,21 +41,21 @@
 
         <ImageView
             android:id="@+id/btnFavorite"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@drawable/ic_heart_unfilled"
             android:contentDescription="Favorites"
             android:layout_marginEnd="16dp" />
 
         <ImageView
             android:id="@+id/btnSearch"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_search"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_search_unfilled"
             android:contentDescription="Search" />
     </LinearLayout>
 
-    <!-- 🔍 Search bar (hidden by default, toggled by search icon) -->
+    <!-- Search bar -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
         android:layout_width="match_parent"
@@ -60,114 +65,198 @@
         android:visibility="gone"
         android:background="@drawable/edit_text_background"
         android:padding="8dp"
-        android:layout_below="@id/topBar"/>
+        android:layout_below="@id/topBar" />
 
-    <!-- Main content -->
+    <!-- Recycler -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerProducts"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottomNav"
         android:layout_below="@id/searchView"
+        android:layout_above="@id/bottomNavWrapper"
+        android:clipToPadding="false"
+        android:paddingBottom="96dp"
         android:visibility="gone" />
 
-    <!-- Empty State -->
+    <!-- Empty State (generic, updated dynamically) -->
     <LinearLayout
         android:id="@+id/emptyStateContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottomNav"
         android:layout_below="@id/searchView"
-        android:gravity="center"
+        android:layout_above="@id/bottomNavWrapper"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center"
+        android:padding="20dp"
+        android:visibility="gone">
 
         <ImageView
-            android:id="@+id/imgScan"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:contentDescription="Scan Icon"
-            android:src="@drawable/ic_carton_scan" />
+            android:id="@+id/emptyStateImage"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:src="@drawable/ic_carton_scan"
+            android:contentDescription="Empty State Icon"
+            android:layout_marginBottom="12dp" />
 
         <TextView
+            android:id="@+id/emptyStateTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:text="Scan Your First Product"
-            android:textColor="#000000"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@android:color/black" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/emptyStateSubtitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
             android:text="To get started, scan a food item or enter the details manually."
+            android:textAlignment="center"
+            android:textSize="14sp"
             android:textColor="#777777"
-            android:textSize="14sp" />
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
 
-    <!-- Floating Add Button -->
+    <!-- Floating Add FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddProduct"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="30dp"
+        android:layout_above="@id/bottomNavWrapper"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="16dp"
         android:contentDescription="Add Product"
         app:srcCompat="@drawable/ic_add"
         app:backgroundTint="@color/teal_700"
-        app:tint="@android:color/white" />
+        app:tint="@android:color/white"
+        app:useCompatPadding="true" />
+
+
+
 
     <!-- Bottom Navigation -->
     <LinearLayout
-        android:id="@+id/bottomNav"
+        android:id="@+id/bottomNavWrapper"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:weightSum="4">
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:elevation="6dp">
 
-        <ImageView
-            android:id="@+id/btnHome"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_home"
-            android:contentDescription="Home"
-            android:padding="8dp" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"/>
 
-        <ImageView
-            android:id="@+id/btnStore"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_cart"
-            android:contentDescription="Store"
-            android:padding="8dp" />
+        <LinearLayout
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="4"
+            android:paddingHorizontal="4dp"
+            android:paddingTop="4dp">
 
-        <!-- 🆕 History button -->
-        <ImageView
-            android:id="@+id/btnHistory"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_clock"
-            android:contentDescription="History"
-            android:padding="8dp" />
+            <!-- Home -->
+            <LinearLayout
+                android:id="@+id/navHomeWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
 
-        <ImageView
-            android:id="@+id/btnSettings"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:src="@drawable/ic_settings"
-            android:contentDescription="Settings"
-            android:padding="8dp" />
+                <ImageView
+                    android:id="@+id/navHome"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_home_unfilled"
+                    android:contentDescription="Home" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <!-- Store -->
+            <LinearLayout
+                android:id="@+id/navCartWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navCart"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_cart"
+                    android:contentDescription="Store" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Store"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <!-- History -->
+            <LinearLayout
+                android:id="@+id/navHistoryWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navHistory"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_clock_unfilled"
+                    android:contentDescription="History" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="History"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+
+            <!-- Settings -->
+            <LinearLayout
+                android:id="@+id/navSettingsWrapper"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/navSettings"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_settings_unfilled"
+                    android:contentDescription="Settings" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/black"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
+
 </RelativeLayout>
