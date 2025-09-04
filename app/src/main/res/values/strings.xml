@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">ExpiryX</string>
+    <string name="app_name" translatable="false">ExpiryX</string>
+    <string name="welcome" translatable="false">Welcome!</string>
+    <string name="email" translatable="false">Email</string>
+    <string name="password" translatable="false">Password</string>
+    <string name="forgot_password" translatable="false">Forgot password?</string>
+    <string name="login" translatable="false">Log In</string>
+    <string name="continue_as_guest" translatable="false">Continue as guest</string>
+    <string name="login_with_google" translatable="false">Login with Google</string>
+    <string name="sign_up" translatable="false">Sign Up</string>
 </resources>
