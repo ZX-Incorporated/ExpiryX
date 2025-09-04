@@ -57,7 +57,7 @@
 
             <!-- Default Time -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/default_time_card"
+                android:id="@+id/defaultTimeCard"
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
@@ -86,8 +86,15 @@
                         android:layout_toEndOf="@id/time_icon_container"
                         android:layout_alignParentEnd="true">
 
-                        <TextView style="@style/SettingsTitle" android:text="Default Time" />
-                        <TextView style="@style/SettingsSubtitle" android:text="6:00 PM (tap to change)" />
+                        <TextView
+                            style="@style/SettingsTitle"
+                            android:text="Default Time" />
+
+                        <!-- ✅ Fixed ID -->
+                        <TextView
+                            android:id="@+id/defaultTimeSubtitle"
+                            style="@style/SettingsSubtitle"
+                            android:text="6:00 PM (tap to change)" />
                     </LinearLayout>
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -123,15 +130,20 @@
                         android:layout_toEndOf="@id/intervals_icon_container"
                         android:layout_alignParentEnd="true">
 
-                        <TextView style="@style/SettingsTitle" android:text="Reminder Intervals" />
-                        <TextView style="@style/SettingsSubtitle" android:text="1 day before, on expiry" />
+                        <TextView
+                            style="@style/SettingsTitle"
+                            android:text="Reminder Intervals" />
+
+                        <TextView
+                            style="@style/SettingsSubtitle"
+                            android:text="1 day before, on expiry" />
                     </LinearLayout>
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Snooze Duration -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/snooze_card"
+                android:id="@+id/snoozeCard"
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
@@ -160,15 +172,22 @@
                         android:layout_toEndOf="@id/snooze_icon_container"
                         android:layout_alignParentEnd="true">
 
-                        <TextView style="@style/SettingsTitle" android:text="Snooze Duration" />
-                        <TextView style="@style/SettingsSubtitle" android:text="1 hour (tap to change)" />
+                        <TextView
+                            style="@style/SettingsTitle"
+                            android:text="Snooze Duration" />
+
+                        <!-- ✅ Fixed ID -->
+                        <TextView
+                            android:id="@+id/snoozeSubtitle"
+                            style="@style/SettingsSubtitle"
+                            android:text="1 hour (tap to change)" />
                     </LinearLayout>
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
 
-    <!-- Bottom nav -->
+    <!-- Bottom nav (unchanged) -->
     <LinearLayout
         android:id="@+id/bottomNavWrapper"
         android:layout_width="match_parent"
