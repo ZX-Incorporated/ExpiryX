@@ -64,7 +64,7 @@
                     <LinearLayout
                         android:id="@+id/profile_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4"> <!-- Aqua -->
+                        android:backgroundTint="@color/teal_200"> <!-- Aqua -->
 
                         <ImageView
                             style="@style/SettingsIcon"
@@ -98,7 +98,7 @@
                     <LinearLayout
                         android:id="@+id/privacy_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4">
+                        android:backgroundTint="@color/teal_200">
 
                         <ImageView
                             style="@style/SettingsIcon"
@@ -136,7 +136,7 @@
                     <LinearLayout
                         android:id="@+id/dark_mode_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4">
+                        android:backgroundTint="@color/teal_200">
 
                         <ImageView
                             style="@style/SettingsIcon"
@@ -177,7 +177,7 @@
                     <LinearLayout
                         android:id="@+id/notifications_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4">
+                        android:backgroundTint="@color/teal_200">
 
                         <ImageView
                             style="@style/SettingsIcon"
@@ -215,7 +215,7 @@
                     <LinearLayout
                         android:id="@+id/app_version_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4">
+                        android:backgroundTint="@color/teal_200">
 
                         <ImageView
                             style="@style/SettingsIcon"
@@ -258,7 +258,7 @@
                     <LinearLayout
                         android:id="@+id/export_icon_container"
                         style="@style/SettingsIconContainer"
-                        android:backgroundTint="#00BCD4">
+                        android:backgroundTint="@color/teal_200">
 
                         <ImageView
                             style="@style/SettingsIcon"
