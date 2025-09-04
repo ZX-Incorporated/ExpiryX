@@ -1,4 +1,3 @@
-// app/src/main/java/com/expiryx/app/ProductDao.kt
 package com.expiryx.app
 
 import androidx.lifecycle.LiveData
@@ -25,6 +24,7 @@ interface ProductDao {
     @Query("SELECT * FROM product_table ORDER BY expirationDate ASC")
     suspend fun getAllProductsNow(): List<Product>
 
-
+    // ✅ new clear all
+    @Query("DELETE FROM product_table")
+    suspend fun clearAllProducts()
 }
-

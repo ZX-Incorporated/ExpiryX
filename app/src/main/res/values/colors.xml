@@ -8,6 +8,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="header_deleted">#9E9E9E</color> <!-- neutral gray -->
 
+    <color name="gold">#FFD700</color>
+    <color name="light_gold">#FFF8DC</color>
+
 
     <!-- Add these two lines for the login screen -->
     <color name="teal_200">#FF03DAC5</color>

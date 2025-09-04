@@ -28,6 +28,12 @@ class SettingsActivity : AppCompatActivity() {
         val versionText: TextView = binding.appVersionText
         versionText.text = "v${getString(R.string.app_version_name)}"
 
+        // --- Notifications ---
+        binding.notificationsCard.setOnClickListener {
+            startActivity(Intent(this, NotificationSettingsActivity::class.java))
+            overridePendingTransition(0, 0)
+        }
+
         // --- Export card with confirmation ---
         binding.exportCard.setOnClickListener {
             AlertDialog.Builder(this)
@@ -38,7 +44,18 @@ class SettingsActivity : AppCompatActivity() {
                 .show()
         }
 
+        // --- Delete all user data ---
+        binding.deleteDataCard.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Delete All Data")
+                .setMessage("This will permanently erase all products and history. Are you sure?")
+                .setPositiveButton("Delete") { _, _ -> deleteAllData() }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
         setupBottomNav()
+        highlightCurrentTab()
     }
 
     private fun setupBottomNav() {
@@ -60,6 +77,12 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private fun highlightCurrentTab() {
+        binding.navHome.setImageResource(R.drawable.ic_home_unfilled)
+        binding.navHistory.setImageResource(R.drawable.ic_clock_unfilled)
+        binding.navSettings.setImageResource(R.drawable.ic_settings_filled)
+    }
+
     private fun exportDataToCsv() {
         val repo = (application as ProductApplication).repository
 
@@ -67,17 +90,16 @@ class SettingsActivity : AppCompatActivity() {
             val products = repo.getAllProductsNow()
             val history = repo.getAllHistoryNow()
 
-            // Save to public Downloads folder
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+            // ✅ App-private Downloads directory (no permissions needed)
+            val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            if (downloadsDir != null && !downloadsDir.exists()) downloadsDir.mkdirs()
 
             val file = File(downloadsDir, "expiryx_data.csv")
 
             FileWriter(file).use { writer ->
-                // === Products Section ===
+                // Products
                 writer.appendLine("=== Products ===")
                 writer.appendLine("ID,Name,Expiry,Quantity,Weight,Notes,Favorite,ImageUri")
-
                 for (p in products) {
                     writer.appendLine(
                         "${p.id},${p.name},${p.expirationDate ?: ""},${p.quantity}," +
@@ -86,11 +108,10 @@ class SettingsActivity : AppCompatActivity() {
                     )
                 }
 
-                // === History Section ===
+                // History
                 writer.appendLine()
                 writer.appendLine("=== History ===")
                 writer.appendLine("ID,ProductID,Name,Expiry,Quantity,Weight,Notes,Favorite,ImageUri,Action,Timestamp")
-
                 for (h in history) {
                     writer.appendLine(
                         "${h.id},${h.productId ?: ""},${h.productName}," +
@@ -104,9 +125,21 @@ class SettingsActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     this@SettingsActivity,
-                    "Exported to Downloads/expiryx_data.csv",
+                    "Exported to: ${file.absolutePath}",
                     Toast.LENGTH_LONG
                 ).show()
+            }
+        }
+    }
+
+
+    private fun deleteAllData() {
+        val repo = (application as ProductApplication).repository
+        lifecycleScope.launch(Dispatchers.IO) {
+            repo.clearAllProducts()
+            repo.clearAllHistory()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@SettingsActivity, "All data deleted", Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -61,6 +61,12 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize|stateHidden" />
+        <activity
+            android:name=".NotificationSettingsActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="stateHidden|adjustPan" />
+
 
         <!-- Scanner -->
         <activity

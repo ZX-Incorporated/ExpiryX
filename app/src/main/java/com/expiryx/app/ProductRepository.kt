@@ -9,7 +9,6 @@ class ProductRepository(
     val allProducts: LiveData<List<Product>> = productDao.getAllProducts()
     val allHistory: LiveData<List<History>> = historyDao.getAllHistory()
 
-    // Insert product WITHOUT creating "Added" history
     suspend fun insertProduct(product: Product) {
         productDao.insert(product)
     }
@@ -22,7 +21,6 @@ class ProductRepository(
         historyDao.insert(history)
     }
 
-    // Delete product → optional "Deleted" log
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
         historyDao.insert(
@@ -41,7 +39,6 @@ class ProductRepository(
         )
     }
 
-    // Mark product as used → History: "Used"
     suspend fun markAsUsed(product: Product) {
         val existing = historyDao.findByProductAndAction(product.id, "Used")
         if (existing == null) {
@@ -63,11 +60,9 @@ class ProductRepository(
         productDao.delete(product)
     }
 
-    // Archive products expired > 7 days → History: "Expired"
     suspend fun archiveExpiredProducts() {
         val now = System.currentTimeMillis()
         val all = productDao.getAllProductsNow()
-
         for (p in all) {
             val expiry = p.expirationDate ?: continue
             if (now - expiry >= 7 * 24 * 60 * 60 * 1000) {
@@ -93,7 +88,10 @@ class ProductRepository(
         }
     }
 
-    // ✅ Expose sync queries for SettingsActivity
     suspend fun getAllProductsNow(): List<Product> = productDao.getAllProductsNow()
     suspend fun getAllHistoryNow(): List<History> = historyDao.getAllHistoryNow()
+
+    // ✅ new methods used in SettingsActivity
+    suspend fun clearAllProducts() = productDao.clearAllProducts()
+    suspend fun clearAllHistory() = historyDao.clearAllHistory()
 }
