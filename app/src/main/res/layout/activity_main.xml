@@ -129,7 +129,7 @@
         android:layout_marginBottom="16dp"
         android:contentDescription="Add Product"
         app:srcCompat="@drawable/ic_big_plus"
-        app:backgroundTint="@color/teal_700"
+        app:backgroundTint="@color/teal_200"
         app:tint="@android:color/white"
         app:useCompatPadding="false"
         app:maxImageSize="48dp"
