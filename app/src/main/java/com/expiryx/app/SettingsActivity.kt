@@ -2,8 +2,10 @@ package com.expiryx.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.expiryx.app.databinding.ActivitySettingsBinding
@@ -22,13 +24,18 @@ class SettingsActivity : AppCompatActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // --- Set version text (safe via resources) ---
+        // --- Show app version ---
         val versionText: TextView = binding.appVersionText
         versionText.text = "v${getString(R.string.app_version_name)}"
 
-        // --- Export data card ---
+        // --- Export card with confirmation ---
         binding.exportCard.setOnClickListener {
-            exportDataToCsv()
+            AlertDialog.Builder(this)
+                .setTitle("Export Data")
+                .setMessage("Do you want to export your products and history to Downloads?")
+                .setPositiveButton("Yes") { _, _ -> exportDataToCsv() }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         setupBottomNav()
@@ -60,26 +67,46 @@ class SettingsActivity : AppCompatActivity() {
             val products = repo.getAllProductsNow()
             val history = repo.getAllHistoryNow()
 
-            val file = File(getExternalFilesDir(null), "expiryx_data.csv")
+            // Save to public Downloads folder
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+
+            val file = File(downloadsDir, "expiryx_data.csv")
+
             FileWriter(file).use { writer ->
-                // Products
+                // === Products Section ===
                 writer.appendLine("=== Products ===")
-                writer.appendLine("ID,Name,Expiry,Quantity,Weight,Notes,Favorite")
+                writer.appendLine("ID,Name,Expiry,Quantity,Weight,Notes,Favorite,ImageUri")
+
                 for (p in products) {
-                    writer.appendLine("${p.id},${p.name},${p.expirationDate ?: ""},${p.quantity},${p.weight ?: ""},${p.notes ?: ""},${p.isFavorite}")
+                    writer.appendLine(
+                        "${p.id},${p.name},${p.expirationDate ?: ""},${p.quantity}," +
+                                "${p.weight ?: ""},${p.notes ?: ""},${p.isFavorite}," +
+                                "${p.imageUri ?: ""}"
+                    )
                 }
 
-                // History
+                // === History Section ===
                 writer.appendLine()
                 writer.appendLine("=== History ===")
-                writer.appendLine("ID,ProductID,Name,Action,Timestamp")
+                writer.appendLine("ID,ProductID,Name,Expiry,Quantity,Weight,Notes,Favorite,ImageUri,Action,Timestamp")
+
                 for (h in history) {
-                    writer.appendLine("${h.id},${h.productId ?: ""},${h.productName},${h.action},${h.timestamp}")
+                    writer.appendLine(
+                        "${h.id},${h.productId ?: ""},${h.productName}," +
+                                "${h.expirationDate ?: ""},${h.quantity}," +
+                                "${h.weight ?: ""},${h.notes ?: ""},${h.isFavorite}," +
+                                "${h.imageUri ?: ""},${h.action},${h.timestamp}"
+                    )
                 }
             }
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@SettingsActivity, "Exported to ${file.absolutePath}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Exported to Downloads/expiryx_data.csv",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
