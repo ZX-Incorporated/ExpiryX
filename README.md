@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxhdpi/ic_stat_name.png" alt="ExpiryX Logo" width="120"/>
+  <img src="app/src/main/res/mipmap-xxhdpi/ic_launcher.png" alt="ExpiryX Logo" width="120"/>
 </p>
 
 <h1 align="center">ExpiryX</h1>
