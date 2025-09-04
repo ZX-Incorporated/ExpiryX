@@ -23,13 +23,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpiryX">
 
-        <!-- Login launcher -->
+
+    <!-- ✅ Launcher Activity must be exported -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -40,14 +41,14 @@
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustPan|stateHidden" />
 
-        <!-- History (empty for now) -->
+        <!-- History -->
         <activity
             android:name=".HistoryActivity"
             android:exported="false"
             android:launchMode="singleTop"
             android:windowSoftInputMode="stateHidden|adjustPan" />
 
-        <!-- Settings (empty for now) -->
+        <!-- Settings -->
         <activity
             android:name=".SettingsActivity"
             android:exported="false"

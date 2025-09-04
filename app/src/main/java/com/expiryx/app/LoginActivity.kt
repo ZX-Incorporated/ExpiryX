@@ -8,8 +8,20 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class LoginActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Step 2: Check if already logged in
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isLoggedIn = prefs.getBoolean("isLoggedIn", false)
+
+        if (isLoggedIn) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         val emailField = findViewById<EditText>(R.id.editTextEmail)
@@ -19,10 +31,14 @@ class LoginActivity : AppCompatActivity() {
         val signUpText = findViewById<Button>(R.id.buttonSignUp)
         val forgotPasswordText = findViewById<TextView>(R.id.textViewForgotPassword)
 
+        // 🔹 Save login state when logging in
         btnLogin.setOnClickListener {
             val email = emailField.text.toString()
             val password = passwordField.text.toString()
+
             if (email.isNotEmpty() && password.isNotEmpty()) {
+                prefs.edit().putBoolean("isLoggedIn", true).apply()
+
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             } else {
@@ -31,11 +47,21 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+        // 🔹 Guest login (also saves state)
         btnGuest.setOnClickListener {
+            prefs.edit().putBoolean("isLoggedIn", true).apply()
+
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
 
-        // Optional: add listeners for signUpText/forgotPasswordText later
+        // (Optional placeholders for signup and forgot password)
+        signUpText.setOnClickListener {
+            // TODO: Handle sign-up
+        }
+
+        forgotPasswordText.setOnClickListener {
+            // TODO: Handle forgot password
+        }
     }
 }
