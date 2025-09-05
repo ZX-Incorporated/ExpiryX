@@ -1,12 +1,14 @@
 package com.expiryx.app
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "history_table")
 data class History(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-
     val productId: Int? = null,
     val productName: String,
     val expirationDate: Long?,
@@ -15,8 +17,6 @@ data class History(
     val notes: String? = null,
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
-
-    // Allowed actions: "Expired", "Used" (and optionally "Deleted")
-    val action: String,
+    val action: String, // "Expired", "Used", "Deleted"
     val timestamp: Long
-)
+) : Parcelable

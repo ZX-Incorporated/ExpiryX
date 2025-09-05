@@ -94,4 +94,39 @@ class ProductRepository(
     // ✅ new methods used in SettingsActivity
     suspend fun clearAllProducts() = productDao.clearAllProducts()
     suspend fun clearAllHistory() = historyDao.clearAllHistory()
+
+    suspend fun deleteHistoryEntry(history: History) {
+        historyDao.deleteById(history.id)
+    }
+
+    suspend fun restoreFromHistory(history: History, asUsed: Boolean) {
+        val product = Product(
+            id = 0,
+            name = history.productName,
+            expirationDate = history.expirationDate,
+            quantity = history.quantity,
+            weight = history.weight,
+            notes = history.notes,
+            imageUri = history.imageUri,
+            isFavorite = history.isFavorite
+        )
+        productDao.insert(product)
+        historyDao.deleteById(history.id)
+    }
+
+    suspend fun restoreWithNewExpiry(history: History, newExpiry: Long) {
+        val product = Product(
+            id = 0,
+            name = history.productName,
+            expirationDate = newExpiry,
+            quantity = history.quantity,
+            weight = history.weight,
+            notes = history.notes,
+            imageUri = history.imageUri,
+            isFavorite = history.isFavorite
+        )
+        productDao.insert(product)
+        historyDao.deleteById(history.id)
+    }
+
 }

@@ -10,8 +10,11 @@ import com.bumptech.glide.Glide
 import java.text.SimpleDateFormat
 import java.util.*
 
-class HistoryAdapter(private var items: List<History>) :
-    RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
+class HistoryAdapter(
+    private var items: List<History>,
+    private val onItemClick: (History) -> Unit,
+    private val onItemLongPress: (History) -> Unit
+) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     class HistoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageHistoryProduct: ImageView = view.findViewById(R.id.imageHistoryProduct)
@@ -40,6 +43,12 @@ class HistoryAdapter(private var items: List<History>) :
             .placeholder(R.drawable.ic_placeholder)
             .error(R.drawable.ic_placeholder)
             .into(holder.imageHistoryProduct)
+
+        holder.itemView.setOnClickListener { onItemClick(item) }
+        holder.itemView.setOnLongClickListener {
+            onItemLongPress(item)
+            true
+        }
     }
 
     override fun getItemCount(): Int = items.size

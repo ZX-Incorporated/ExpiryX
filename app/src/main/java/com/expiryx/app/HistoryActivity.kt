@@ -13,15 +13,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.expiryx.app.databinding.ActivityHistoryBinding
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.appcompat.app.AlertDialog
+
 
 class HistoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHistoryBinding
     private lateinit var adapter: HistoryAdapter
 
-    private val viewModel: ProductViewModel by viewModels {
-        ProductViewModelFactory((application as ProductApplication).repository)
+    val viewModel: HistoryViewModel by viewModels {
+        HistoryViewModelFactory((application as ProductApplication).repository)
     }
+
 
     private var fullList: List<History> = emptyList()
     private var sortIndex: Int = 0
@@ -45,7 +48,19 @@ class HistoryActivity : AppCompatActivity() {
         binding.navSettings.setImageResource(R.drawable.ic_settings_unfilled)
 
         // setup RecyclerView
-        adapter = HistoryAdapter(emptyList())
+        adapter = HistoryAdapter(
+            emptyList(),
+            onItemClick = { h -> HistoryDetailBottomSheet.newInstance(h).show(supportFragmentManager, "HistoryDetail") },
+            onItemLongPress = { h ->
+                AlertDialog.Builder(this)
+                    .setTitle("Permanently Delete")
+                    .setMessage("Remove ${h.productName} from history?")
+                    .setPositiveButton("Delete") { _, _ -> viewModel.permanentlyDelete(h) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        )
+
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = adapter
 
@@ -347,4 +362,5 @@ class HistoryActivity : AppCompatActivity() {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
     }
+
 }
