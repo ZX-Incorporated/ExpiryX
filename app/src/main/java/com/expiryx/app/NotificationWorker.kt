@@ -16,6 +16,7 @@ class NotificationWorker(
         const val KEY_MESSAGE_TYPE = "message_type"
         const val KEY_MESSAGE = "message"
         private const val PREFS_NAME = "notif_debounce"
+        private const val DEBOUNCE_MS = 18 * 60 * 60 * 1000L // 18 hours
     }
 
     override suspend fun doWork(): Result {
@@ -24,28 +25,36 @@ class NotificationWorker(
         val type = inputData.getString(KEY_MESSAGE_TYPE) ?: "custom"
         val customMessage = inputData.getString(KEY_MESSAGE)
 
+        // debounce to avoid spam
         val sp = applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val debounceKey = "last_${productId}_$type"
         val now = System.currentTimeMillis()
         val last = sp.getLong(debounceKey, 0L)
-
-        val DEBOUNCE_MS = 18 * 60 * 60 * 1000L // 18 hours
         if (now - last < DEBOUNCE_MS) return Result.success()
 
-        val message = customMessage ?: when (type) {
-            "expired" -> "has already expired."
-            "today" -> "expires today."
-            "1day" -> "expires tomorrow."
-            "reminder" -> "reminder - check expiry date soon."
-            "snooze" -> "snooze reminder."
-            else -> "reminder."
+        val resolvedMessage = when {
+            // from NotificationScheduler: "interval_X"
+            type.startsWith("interval_") -> {
+                val d = type.removePrefix("interval_").toIntOrNull()
+                when (d) {
+                    0 -> "$productName expires today."
+                    1 -> "$productName expires tomorrow."
+                    null -> "$productName reminder."
+                    else -> "$productName expires in $d days."
+                }
+            }
+            // from NotificationScheduler: "expired_notice"
+            type == NotificationScheduler.EXPIRED_NOTICE_TYPE -> "$productName has already expired."
+            // snooze
+            type == "snooze" -> customMessage ?: "$productName snooze reminder."
+            // fallback (custom)
+            else -> customMessage ?: "$productName reminder."
         }
 
-        // Show notification with app icon in system bar
         NotificationUtils.showExpiryNotification(
             applicationContext,
             productName,
-            "$productName $message",
+            resolvedMessage,
             productId
         )
 

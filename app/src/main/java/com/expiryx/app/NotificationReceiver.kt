@@ -19,13 +19,14 @@ class NotificationReceiver : BroadcastReceiver() {
                 NotificationScheduler.scheduleSnooze(context, productId, snoozeDays, title, message)
             }
             else -> {
-                // Default notification behavior
                 val message = intent.getStringExtra("message") ?: "Product reminder"
                 val title = intent.getStringExtra("title") ?: "Reminder"
+                val productId = intent.getIntExtra("product_id", 0)
 
                 NotificationUtils.createChannel(context)
-                NotificationUtils.showExpiryNotification(context, title, message)
+                NotificationUtils.showExpiryNotification(context, title, message, productId)
             }
+
         }
     }
 }

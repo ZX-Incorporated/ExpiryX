@@ -1,385 +1,317 @@
 package com.expiryx.app
 
+import android.Manifest
 import android.content.Intent
-import android.content.res.ColorStateList
-import android.graphics.Color
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Parcelable
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
+import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.expiryx.app.databinding.ActivityMainBinding
-import com.expiryx.app.databinding.DialogProductDetailsBinding
-import com.expiryx.app.databinding.DialogQuantityInputBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.chip.Chip
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
-@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var productAdapter: ProductAdapter
+    private lateinit var adapter: ProductAdapter
+
     private val productViewModel: ProductViewModel by viewModels {
         ProductViewModelFactory((application as ProductApplication).repository)
     }
 
-    private var allProductsList: List<Product> = listOf()
-    private var currentSortMode: SortMode = SortMode.EXPIRY_ASC
-    private var showFavoritesOnly = false // Filter state for favorites
+    private var allProducts: List<Product> = emptyList()
+    private var showFavoritesOnly = false
 
-    // Activity result launcher for ManualEntryActivity
+    enum class SortMode {
+        EXPIRY_ASC, EXPIRY_DESC,
+        ALPHA_AZ, ALPHA_ZA,
+        ADDED_ASC, ADDED_DESC,
+        QTY_ASC, QTY_DESC,
+        FAVORITES_FIRST
+    }
+
+    private var sortMode: SortMode = SortMode.EXPIRY_ASC
+
     private val manualEntryLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // No specific action needed here if LiveData handles updates
-                // Optionally, refresh list or show a message
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri == null) {
+                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
             }
+            try {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: SecurityException) {}
+            // Launch AddProductBottomSheet with the selected URI using newInstance
+            AddProductBottomSheet.newInstance(uri).show(supportFragmentManager, "AddProductWithUriTag")
         }
 
-    // Enum for sort modes
-    enum class SortMode {
-        EXPIRY_ASC, EXPIRY_DESC, ALPHA_AZ, ALPHA_ZA, ADDED_ASC, ADDED_DESC
-    }
+    private val requestNotifPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) scheduleAllProductNotifications()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupRecyclerView()
+        NotificationUtils.createChannel(this)
+        productViewModel.archiveExpiredProducts()
+
+        setupRecycler()
         setupObservers()
         setupListeners()
+        highlightBottomNav(BottomTab.HOME)
 
-        // Initial load (default sort: EXPIRY_ASC)
-        applyFiltersAndSort()
-        highlightCurrentTab()
+        checkAndMaybeRequestNotificationPermission()
     }
 
-    private fun setupRecyclerView() {
-        productAdapter = ProductAdapter(
-            onFavoriteClick = { product ->
-                // Toggle favorite status and update in ViewModel
-                val updatedProduct = product.copy(isFavorite = !product.isFavorite)
-                productViewModel.update(updatedProduct)
-                // Optionally: provide immediate visual feedback if LiveData update isn't fast enough
-            },
-            onItemClick = { product ->
-                showProductDetailsDialog(product)
-            },
-            onDeleteLongPress = { product ->
-                showDeleteConfirmationDialog(product)
-            }
+    private fun setupRecycler() {
+        adapter = ProductAdapter(
+            onFavoriteClick = { p -> productViewModel.update(p.copy(isFavorite = !p.isFavorite)) },
+            onItemClick = { p -> ProductDetailBottomSheet.newInstance(p).show(supportFragmentManager, "Detail") },
+            onDeleteLongPress = { deleteProductWithConfirmation(it) }
         )
-        binding.recyclerViewProducts.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = productAdapter
-        }
+        binding.recyclerProducts.layoutManager = LinearLayoutManager(this)
+        binding.recyclerProducts.adapter = adapter
     }
 
     private fun setupObservers() {
-        productViewModel.allProducts.observe(this, Observer { products ->
-            allProductsList = products ?: listOf()
-            applyFiltersAndSort() // Update list when data changes
-        })
+        productViewModel.allProducts.observe(this) { products ->
+            allProducts = products
+            refreshList()
+            scheduleAllProductNotifications()
+            productViewModel.archiveExpiredProducts()
+        }
     }
+    fun editProduct(product: Product) {
+        val intent = Intent(this, ManualEntryActivity::class.java).apply {
+            putExtra("product", product)
+            putExtra("imageUri", product.imageUri)
+        }
+        startActivity(intent)
+    }
+
 
     private fun setupListeners() {
-        binding.fabAddProduct.setOnClickListener { showAddProductOptions() }
-        binding.btnSort.setOnClickListener { showSortOptions(it) }
-        binding.btnFavorite.setOnClickListener { toggleFavoritesFilter() } // Listener for favorite filter
-        binding.editTextSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                applyFiltersAndSort()
-            }
+        binding.btnAddProduct.setOnClickListener { showAddProductOptions() }
+        binding.btnSortBy.setOnClickListener { showSortOptions(it) }
 
-            override fun afterTextChanged(s: Editable?) {}
+        binding.btnFavorite.setOnClickListener {
+            showFavoritesOnly = !showFavoritesOnly
+            binding.btnFavorite.setImageResource(
+                if (showFavoritesOnly) R.drawable.ic_heart_filled else R.drawable.ic_heart_unfilled
+            )
+            refreshList()
+        }
+
+        binding.btnSearch.setOnClickListener {
+            if (binding.searchView.visibility == View.VISIBLE) closeSearchCompletely() else openSearch()
+        }
+
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?) = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val filtered = if (!newText.isNullOrBlank()) {
+                    allProducts.filter {
+                        it.name.contains(newText, ignoreCase = true) ||
+                                (it.brand?.contains(newText, ignoreCase = true) ?: false)
+                    }
+                } else allProducts
+                updateList(filtered, fromSearch = !newText.isNullOrBlank())
+                return true
+            }
         })
+        binding.searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && binding.searchView.query.isNullOrEmpty()) closeSearchCompletely()
+        }
 
-        // Bottom Nav Listeners
-        setupBottomNav()
+        val closeBtn = binding.searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+        closeBtn?.setOnClickListener {
+            if (!binding.searchView.query.isNullOrEmpty()) binding.searchView.setQuery("", false)
+            else closeSearchCompletely()
+        }
+
+        binding.navHomeWrapper.setOnClickListener { highlightBottomNav(BottomTab.HOME) }
+        binding.navCartWrapper.setOnClickListener { Toast.makeText(this, "Store feature coming soon!", Toast.LENGTH_SHORT).show() }
+        binding.navHistoryWrapper.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
+        }
+        binding.navSettingsWrapper.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            overridePendingTransition(0, 0)
+            finish()
+        }
     }
 
-    private fun applyFiltersAndSort() {
-        var filteredList = allProductsList
-
-        // Apply favorite filter
-        if (showFavoritesOnly) {
-            filteredList = filteredList.filter { it.isFavorite }
-        }
-
-        // Apply search filter
-        val searchQuery = binding.editTextSearch.text.toString().trim()
-        if (searchQuery.isNotEmpty()) {
-            filteredList = filteredList.filter {
-                it.name.contains(searchQuery, ignoreCase = true) ||
-                        (it.brand?.contains(searchQuery, ignoreCase = true) ?: false)
-            }
-        }
-
-        // Apply sort
-        val sortedList = when (currentSortMode) {
-            SortMode.EXPIRY_ASC -> filteredList.sortedWith(compareBy(nullsLast()) { it.expirationDate })
-            SortMode.EXPIRY_DESC -> filteredList.sortedWith(compareByDescending(nullsLast()) { it.expirationDate })
-            SortMode.ALPHA_AZ -> filteredList.sortedBy { it.name }
-            SortMode.ALPHA_ZA -> filteredList.sortedByDescending { it.name }
-            SortMode.ADDED_ASC -> filteredList.sortedBy { it.id } // Assuming id reflects addition order
-            SortMode.ADDED_DESC -> filteredList.sortedByDescending { it.id }
-        }
-        productAdapter.updateData(sortedList, currentSortMode)
+    private fun showAddProductOptions() {
+        // This is the primary way to show the AddProductBottomSheet for general use.
+        // The pickImageLauncher in MainActivity is a specific case for when an image is ALREADY chosen by MainActivity itself.
+        AddProductBottomSheet.newInstance().show(supportFragmentManager, "AddProductGeneralTag")
     }
 
-    private fun showSortOptions(anchorView: View) {
-        val popup = PopupMenu(this, anchorView)
-        popup.menuInflater.inflate(R.menu.menu_sort, popup.menu)
-
-        // Set checkable and checked for the current sort mode
-        when (currentSortMode) {
-            SortMode.EXPIRY_ASC -> popup.menu.findItem(R.id.sort_expiry_asc).isChecked = true
-            SortMode.EXPIRY_DESC -> popup.menu.findItem(R.id.sort_expiry_desc).isChecked = true
-            SortMode.ALPHA_AZ -> popup.menu.findItem(R.id.sort_alpha_az).isChecked = true
-            SortMode.ALPHA_ZA -> popup.menu.findItem(R.id.sort_alpha_za).isChecked = true
-            SortMode.ADDED_ASC -> popup.menu.findItem(R.id.sort_added_asc).isChecked = true
-            SortMode.ADDED_DESC -> popup.menu.findItem(R.id.sort_added_desc).isChecked = true
+    private fun showSortOptions(anchor: View) {
+        val popup = android.widget.PopupMenu(this, anchor)
+        popup.menu.apply {
+            add(0, 1, 0, "Expiry Soonest")
+            add(0, 2, 0, "Expiry Latest")
+            add(0, 3, 0, "Name A–Z")
+            add(0, 4, 0, "Name Z–A")
+            add(0, 5, 0, "Quantity Low→High")
+            add(0, 6, 0, "Quantity High→Low")
+            add(0, 7, 0, "Favorites First")
+            add(0, 8, 0, "Added: Oldest First")
+            add(0, 9, 0, "Added: Newest First")
         }
-
         popup.setOnMenuItemClickListener { item ->
-            currentSortMode = when (item.itemId) {
-                R.id.sort_expiry_asc -> SortMode.EXPIRY_ASC
-                R.id.sort_expiry_desc -> SortMode.EXPIRY_DESC
-                R.id.sort_alpha_az -> SortMode.ALPHA_AZ
-                R.id.sort_alpha_za -> SortMode.ALPHA_ZA
-                R.id.sort_added_asc -> SortMode.ADDED_ASC
-                R.id.sort_added_desc -> SortMode.ADDED_DESC
-                else -> currentSortMode
+            sortMode = when (item.itemId) {
+                1 -> SortMode.EXPIRY_ASC
+                2 -> SortMode.EXPIRY_DESC
+                3 -> SortMode.ALPHA_AZ
+                4 -> SortMode.ALPHA_ZA
+                5 -> SortMode.QTY_ASC
+                6 -> SortMode.QTY_DESC
+                7 -> SortMode.FAVORITES_FIRST
+                8 -> SortMode.ADDED_ASC
+                9 -> SortMode.ADDED_DESC
+                else -> SortMode.EXPIRY_ASC
             }
-            item.isChecked = true
-            applyFiltersAndSort()
+            refreshList()
             true
         }
         popup.show()
     }
 
-    private fun showProductDetailsDialog(product: Product) {
-        val dialogBinding = DialogProductDetailsBinding.inflate(LayoutInflater.from(this))
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(dialogBinding.root)
-            .setBackground(ContextCompat.getDrawable(this, R.drawable.dialog_background))
-            .create()
+    private fun refreshList() {
+        var list = allProducts
+        if (showFavoritesOnly) list = list.filter { it.isFavorite }
 
-        dialogBinding.textProductName.text = product.name
-        dialogBinding.textProductBrand.text = "Brand: ${product.brand ?: "N/A"}"
-        dialogBinding.textProductWeight.text = "Weight: ${product.weight ?: "N/A"}"
-        dialogBinding.textProductQuantity.text = "Quantity: ${product.quantity}"
-
-        val dateFormat = SimpleDateFormat("dd MMM yyyy (EEE)", Locale.getDefault())
-        dialogBinding.textExpirationDate.text = "Expires: ${
-            product.expirationDate?.let { dateFormat.format(Date(it)) } ?: "Not set"
-        }"
-
-        dialogBinding.textReminderDays.text = "Reminder: ${product.reminderDays} days before"
-        dialogBinding.chipFavorite.isChecked = product.isFavorite
-        dialogBinding.chipFavorite.chipIcon = ContextCompat.getDrawable(
-            this,
-            if (product.isFavorite) R.drawable.ic_fav_filled else R.drawable.ic_fav_unfilled
-        )
-        dialogBinding.chipFavorite.text = if (product.isFavorite) "Favorited" else "Add to Favorites"
-
-
-        if (!product.imageUri.isNullOrBlank()) {
-            Glide.with(this).load(Uri.parse(product.imageUri)).placeholder(R.drawable.ic_placeholder).into(dialogBinding.imageProduct)
-        } else {
-            dialogBinding.imageProduct.setImageResource(R.drawable.ic_placeholder)
+        list = when (sortMode) {
+            SortMode.ALPHA_AZ -> list.sortedBy { it.name.lowercase(Locale.getDefault()) }
+            SortMode.ALPHA_ZA -> list.sortedByDescending { it.name.lowercase(Locale.getDefault()) }
+            SortMode.EXPIRY_ASC -> list.sortedBy { it.expirationDate ?: Long.MAX_VALUE }
+            SortMode.EXPIRY_DESC -> list.sortedByDescending { it.expirationDate ?: 0L }
+            SortMode.QTY_ASC -> list.sortedBy { it.quantity }
+            SortMode.QTY_DESC -> list.sortedByDescending { it.quantity }
+            SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite }
+            SortMode.ADDED_ASC -> list.sortedBy { it.id }
+            SortMode.ADDED_DESC -> list.sortedByDescending { it.id }
         }
 
-        // Determine pill background and text based on expiry
-        val today = Calendar.getInstance()
-        val expiryCal = Calendar.getInstance().apply { product.expirationDate?.let { timeInMillis = it } }
-
-        when {
-            product.expirationDate == null -> {
-                dialogBinding.pillStatus.visibility = View.GONE // Hide if no expiry date
-            }
-
-            expiryCal.before(today) -> { // Expired
-                dialogBinding.pillStatus.text = "Expired"
-                dialogBinding.pillStatus.background = ContextCompat.getDrawable(this, R.drawable.pill_expired_bg)
-                dialogBinding.pillStatus.setTextColor(Color.WHITE)
-            }
-
-            else -> { // Not expired
-                val daysUntilExpiry = ((expiryCal.timeInMillis - today.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
-                dialogBinding.pillStatus.text = when {
-                    daysUntilExpiry == 0 -> "Expires Today"
-                    daysUntilExpiry == 1 -> "Expires Tomorrow"
-                    else -> "Expires in $daysUntilExpiry days"
-                }
-                // Use a default or less urgent background for non-expired
-                dialogBinding.pillStatus.background = ContextCompat.getDrawable(this, R.drawable.pill_default_bg)
-                dialogBinding.pillStatus.setTextColor(ContextCompat.getColor(this, R.color.default_pill_text_color)) // Define this color
-            }
-        }
-
-
-        dialogBinding.chipFavorite.setOnClickListener {
-            val updatedProduct = product.copy(isFavorite = !product.isFavorite)
-            productViewModel.update(updatedProduct)
-            // Update chip UI immediately
-            dialogBinding.chipFavorite.isChecked = updatedProduct.isFavorite
-            dialogBinding.chipFavorite.chipIcon = ContextCompat.getDrawable(
-                this,
-                if (updatedProduct.isFavorite) R.drawable.ic_fav_filled else R.drawable.ic_fav_unfilled
-            )
-            dialogBinding.chipFavorite.text = if (updatedProduct.isFavorite) "Favorited" else "Add to Favorites"
-        }
-
-        dialogBinding.buttonEdit.setOnClickListener {
-            editProduct(product)
-            dialog.dismiss()
-        }
-
-        dialogBinding.buttonMarkAsUsed.setOnClickListener {
-            lifecycleScope.launch {
-                productViewModel.markAsUsed(product)
-                Toast.makeText(this@MainActivity, "${product.name} marked as used.", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-        }
-
-        dialogBinding.buttonDelete.setOnClickListener {
-            dialog.dismiss() // Dismiss this dialog first
-            showDeleteConfirmationDialog(product) // Then show delete confirmation
-        }
-
-        dialogBinding.buttonClose.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
+        val isSearching = !binding.searchView.query.isNullOrEmpty()
+        updateList(list, fromSearch = isSearching)
     }
 
-    private fun showDeleteConfirmationDialog(product: Product) {
-        MaterialAlertDialogBuilder(this)
+    private fun updateList(products: List<Product>, fromSearch: Boolean = false) {
+        if (allProducts.isEmpty()) {
+            binding.recyclerProducts.visibility = View.GONE
+            binding.emptyStateContainer.visibility = View.VISIBLE
+            binding.emptyStateTitle.text = "Scan Your First Product"
+            binding.emptyStateSubtitle.text = "To get started, scan a food item or enter the details manually."
+        } else if (products.isEmpty()) {
+            binding.recyclerProducts.visibility = View.GONE
+            binding.emptyStateContainer.visibility = View.VISIBLE
+            binding.emptyStateTitle.text = if (showFavoritesOnly) "No Favorites Yet" else "No Results Found"
+            binding.emptyStateSubtitle.text = ""
+        } else {
+            binding.recyclerProducts.visibility = View.VISIBLE
+            binding.emptyStateContainer.visibility = View.GONE
+            adapter.updateData(products, sortMode)
+        }
+    }
+
+    fun deleteProductWithConfirmation(product: Product) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Delete Product")
             .setMessage("Are you sure you want to delete ${product.name}?")
-            .setNegativeButton("Cancel", null)
             .setPositiveButton("Delete") { _, _ ->
                 productViewModel.delete(product)
-                Toast.makeText(this, "${product.name} deleted", Toast.LENGTH_SHORT).show()
+                NotificationScheduler.cancelForProduct(this, product)
             }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun showAddProductOptions() {
-        // Inflate the bottom sheet layout
-        val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_add_product, null)
-        val dialog = BottomSheetDialog(this)
-        dialog.setContentView(bottomSheetView)
-
-        // Find views in the bottom sheet
-        val optionScanBarcode = bottomSheetView.findViewById<View>(R.id.option_scan_barcode)
-        val optionManualEntry = bottomSheetView.findViewById<View>(R.id.option_manual_entry)
-        val optionCloudSearch = bottomSheetView.findViewById<View>(R.id.option_cloud_search)
-        val optionDeviceUpload = bottomSheetView.findViewById<View>(R.id.option_upload_from_device)
-
-
-        optionScanBarcode.setOnClickListener {
-            // Start BarcodeScannerActivity
-            val intent = Intent(this, BarcodeScannerActivity::class.java)
-            manualEntryLauncher.launch(intent) // Use launcher for potential result
-            dialog.dismiss()
-        }
-
-        optionManualEntry.setOnClickListener {
-            // Start ManualEntryActivity for a new product
-            val intent = Intent(this, ManualEntryActivity::class.java)
-            intent.putExtra("isEdit", false) // Explicitly indicate it's not an edit
-            manualEntryLauncher.launch(intent)
-            dialog.dismiss()
-        }
-
-        optionCloudSearch.setOnClickListener {
-            Toast.makeText(this, "Cloud Search coming soon!", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-        }
-
-        optionDeviceUpload.setOnClickListener {
-            Toast.makeText(this, "Upload from Device coming soon!", Toast.LENGTH_SHORT).show()
-            // Example: Intent to pick an image or file, then process it
-            // val intent = Intent(Intent.ACTION_GET_CONTENT)
-            // intent.type = "*/*" // Or specific MIME types
-            // startActivityForResult(intent, REQUEST_CODE_UPLOAD)
-            dialog.dismiss()
-        }
-        dialog.show()
-    }
-
-
-    private fun editProduct(product: Product) {
-        val intent = Intent(this, ManualEntryActivity::class.java).apply {
-            putExtra("product", product as Parcelable) // Make sure Product is Parcelable
-            putExtra("isEdit", true) // Indicate that this is an edit operation
-            // If image URI is already persisted and accessible via product.imageUri,
-            // no need to pass it separately unless it's a temporary URI.
-        }
-        manualEntryLauncher.launch(intent)
-    }
-
-    private fun toggleFavoritesFilter() {
-        showFavoritesOnly = !showFavoritesOnly
-        // Update the icon based on the filter state
-        binding.btnFavorite.setImageResource(if (showFavoritesOnly) R.drawable.ic_heart_filled else R.drawable.ic_heart_unfilled)
-        applyFiltersAndSort() // Re-apply filters and sort
-    }
-
-    private fun setupBottomNav() {
-        binding.navHomeWrapper.setOnClickListener { /* Already on Home */ }
-        binding.navCartWrapper.setOnClickListener {
-            Toast.makeText(this, "Store feature coming soon!", Toast.LENGTH_SHORT).show()
-            // Example: startActivity(Intent(this, StoreActivity::class.java))
-            // overridePendingTransition(0,0) // No transition
-        }
-        binding.navHistoryWrapper.setOnClickListener {
-            startActivity(Intent(this, HistoryActivity::class.java))
-            overridePendingTransition(0, 0)
-        }
-        binding.navSettingsWrapper.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-            overridePendingTransition(0, 0)
+    fun markProductAsUsed(product: Product) {
+        lifecycleScope.launch {
+            productViewModel.markAsUsed(product)
+            NotificationScheduler.cancelForProduct(this@MainActivity, product)
+            Toast.makeText(this@MainActivity, "${product.name} moved to history (Used)", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun highlightCurrentTab() {
-        // Assuming you have methods to set filled/unfilled icons for all tabs
-        binding.navHome.setImageResource(R.drawable.ic_home_filled) // Assuming filled version
-        binding.navCart.setImageResource(R.drawable.ic_cart) // Default/unfilled
-        binding.navHistory.setImageResource(R.drawable.ic_clock_unfilled)
-        binding.navSettings.setImageResource(R.drawable.ic_settings_unfilled)
+    private fun openSearch() {
+        binding.searchView.visibility = View.VISIBLE
+        binding.searchView.isIconified = false
+        binding.searchView.requestFocus()
     }
+
+    private fun closeSearchCompletely() {
+        binding.searchView.setQuery("", false)
+        binding.searchView.clearFocus()
+        binding.searchView.visibility = View.GONE
+        refreshList()
+    }
+
+    private fun highlightBottomNav(tab: BottomTab) {
+        binding.navHome.setImageResource(if (tab == BottomTab.HOME) R.drawable.ic_home_filled else R.drawable.ic_home_unfilled)
+        binding.navHistory.setImageResource(if (tab == BottomTab.HISTORY) R.drawable.ic_clock_filled else R.drawable.ic_clock_unfilled) // Corrected based on your provided XML resource names
+        binding.navSettings.setImageResource(if (tab == BottomTab.SETTINGS) R.drawable.ic_settings_filled else R.drawable.ic_settings_unfilled) // Corrected
+        binding.navCart.setImageResource(R.drawable.ic_cart)
+    }
+
+    private fun scheduleAllProductNotifications() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            lifecycleScope.launch {
+                // Assuming your ProductViewModel has a way to get all products,
+                // for example, through a LiveData or a suspend function.
+                // Adjust this line based on how your ViewModel exposes the product list.
+                val products = productViewModel.allProducts.value // Or some other way to get the list
+                products?.let {
+                    // Now, you need to decide what to do with these products.
+                    // For example, if you have a NotificationScheduler class:
+                    // NotificationScheduler.scheduleNotificationsForProducts(this@MainActivity, it)
+                    // Or if scheduleNotificationsForProducts is a global/extension function:
+                    // scheduleNotificationsForProducts(this@MainActivity, it)
+
+                    // For now, let's assume you want to iterate and schedule for each
+                    it.forEach { product ->
+                        NotificationScheduler.scheduleForProduct(this@MainActivity, product)
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun checkAndMaybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                scheduleAllProductNotifications() // Already granted
+            }
+        } else {
+            scheduleAllProductNotifications() // No runtime permission needed for older Android versions
+        }
+    }
+
+    // Enum for Bottom Navigation Tabs (assuming you have this or similar)
+    enum class BottomTab { HOME, CART, HISTORY, SETTINGS }
 }
