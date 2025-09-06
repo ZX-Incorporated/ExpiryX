@@ -36,7 +36,8 @@ class NotificationWorker(
             "expired" -> "has already expired."
             "today" -> "expires today."
             "1day" -> "expires tomorrow."
-            "7days" -> "will expire in 7 days."
+            "reminder" -> "reminder - check expiry date soon."
+            "snooze" -> "snooze reminder."
             else -> "reminder."
         }
 
@@ -44,7 +45,8 @@ class NotificationWorker(
         NotificationUtils.showExpiryNotification(
             applicationContext,
             productName,
-            "$productName $message"
+            "$productName $message",
+            productId
         )
 
         sp.edit().putLong(debounceKey, now).apply()

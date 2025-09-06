@@ -5,16 +5,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import java.text.SimpleDateFormat
 import java.util.*
 
 class HistoryAdapter(
-    private var items: List<History>,
     private val onItemClick: (History) -> Unit,
     private val onItemLongPress: (History) -> Unit
-) : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
+) : ListAdapter<History, HistoryAdapter.HistoryViewHolder>(HistoryDiffCallback()) {
 
     class HistoryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imageHistoryProduct: ImageView = view.findViewById(R.id.imageHistoryProduct)
@@ -30,7 +31,7 @@ class HistoryAdapter(
     }
 
     override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
-        val item = items[position]
+        val item = getItem(position)
 
         holder.textHistoryProduct.text = item.productName
         holder.textHistoryAction.text = item.action
@@ -51,10 +52,17 @@ class HistoryAdapter(
         }
     }
 
-    override fun getItemCount(): Int = items.size
-
     fun updateData(newItems: List<History>) {
-        items = newItems
-        notifyDataSetChanged()
+        submitList(newItems)
+    }
+}
+
+private class HistoryDiffCallback : DiffUtil.ItemCallback<History>() {
+    override fun areItemsTheSame(oldItem: History, newItem: History): Boolean {
+        return oldItem.id == newItem.id
+    }
+
+    override fun areContentsTheSame(oldItem: History, newItem: History): Boolean {
+        return oldItem == newItem
     }
 }

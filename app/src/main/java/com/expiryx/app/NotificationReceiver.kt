@@ -6,11 +6,27 @@ import android.content.Intent
 
 class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val message = intent.getStringExtra("message") ?: "Product reminder"
-        val title = intent.getStringExtra("title") ?: "Reminder"
+        val action = intent.getStringExtra("action")
+        
+        when (action) {
+            "snooze" -> {
+                val productId = intent.getIntExtra("product_id", 0)
+                val snoozeDays = intent.getIntExtra("snooze_days", 1)
+                val title = intent.getStringExtra("title") ?: "Reminder"
+                val message = intent.getStringExtra("message") ?: "Product reminder"
+                
+                // Schedule snooze notification
+                NotificationScheduler.scheduleSnooze(context, productId, snoozeDays, title, message)
+            }
+            else -> {
+                // Default notification behavior
+                val message = intent.getStringExtra("message") ?: "Product reminder"
+                val title = intent.getStringExtra("title") ?: "Reminder"
 
-        NotificationUtils.createChannel(context) // ✅ now public
-        NotificationUtils.showExpiryNotification(context, title, message)
+                NotificationUtils.createChannel(context)
+                NotificationUtils.showExpiryNotification(context, title, message)
+            }
+        }
     }
 }
 

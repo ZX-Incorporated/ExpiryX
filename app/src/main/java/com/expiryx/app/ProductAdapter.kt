@@ -72,18 +72,18 @@ class ProductAdapter(
                 val h = holder as ProductViewHolder
                 val product = item.product
 
-                h.textProductName.text = product.name
+                h.textProductName.text = product.name                
 
-                val brandAndWeight = listOfNotNull(
-                    product.brand?.takeIf { it.isNotBlank() },
-                    product.weight?.takeIf { it.isNotBlank() }
-                ).joinToString(" • ")
-
-                h.textProductBrand.text = brandAndWeight
-                h.textProductBrand.visibility = if (brandAndWeight.isNotBlank()) View.VISIBLE else View.GONE
+                val brandText = product.brand?.takeIf { it.isNotBlank() }
+                if (!brandText.isNullOrBlank()) {
+                    h.textProductBrand.text = brandText
+                    h.textProductBrand.visibility = View.VISIBLE
+                } else {
+                    h.textProductBrand.visibility = View.GONE
+                }
 
                 h.textProductQuantity.text = "Qty: ${product.quantity}"
-                h.btnFavorite.setImageResource(if (product.isFavorite) R.drawable.ic_heart_filled else R.drawable.ic_heart_unfilled)
+                h.btnFavorite.setImageResource(if (product.isFavorite) R.drawable.ic_fav_filled else R.drawable.ic_fav_unfilled)
                 h.btnFavorite.setOnClickListener { onFavoriteClick(product) }
 
                 Glide.with(h.itemView.context)
@@ -102,12 +102,12 @@ class ProductAdapter(
 
     /**
      * ✅ MAJOR FIX: This function now accepts the sort mode.
-     * It will only group by date if the sort mode is EXPIRY_ASC.
+     * It will group by date if the sort mode is EXPIRY_ASC or EXPIRY_DESC.
      * Otherwise, it will show a simple, correctly sorted list.
      */
     fun updateData(products: List<Product>, sortMode: MainActivity.SortMode) {
-        val listItems = if (sortMode == MainActivity.SortMode.EXPIRY_ASC) {
-            createGroupedList(products)
+        val listItems = if (sortMode == MainActivity.SortMode.EXPIRY_ASC || sortMode == MainActivity.SortMode.EXPIRY_DESC) {
+            createGroupedList(products, sortMode == MainActivity.SortMode.EXPIRY_DESC)
         } else {
             createFlatList(products)
         }
@@ -118,7 +118,7 @@ class ProductAdapter(
         return products.map { ProductListItem.ProductItem(it) }
     }
 
-    private fun createGroupedList(products: List<Product>): List<ProductListItem> {
+    private fun createGroupedList(products: List<Product>, reverseOrder: Boolean = false): List<ProductListItem> {
         val grouped = mutableListOf<ProductListItem>()
         val now = System.currentTimeMillis()
         val startToday = getStartOfDay(now)
@@ -138,15 +138,27 @@ class ProductAdapter(
             }
         }
 
-        addGroup("Expired", R.color.red) { val d = dayDiff(it.expirationDate); d != null && d < 0 }
-        addGroup("Expiring today", R.color.orange) { val d = dayDiff(it.expirationDate); d != null && d == 0L }
-        addGroup("Expiring tomorrow", R.color.yellow) { val d = dayDiff(it.expirationDate); d != null && d == 1L }
-        addGroup("Expiring in 2-3 days", R.color.green) { val d = dayDiff(it.expirationDate); d != null && d in 2L..3L }
-        addGroup("Expiring in 4-14 days", R.color.blue) { val d = dayDiff(it.expirationDate); d != null && d in 4L..14L }
-        addGroup("Expiring in 15-90 days", R.color.teal_200) { val d = dayDiff(it.expirationDate); d != null && d in 15L..90L }
-        addGroup("Expiring in 3-12 months", R.color.purple) { val d = dayDiff(it.expirationDate); d != null && d in 91L..365L }
-        addGroup("Expiring in 1+ year", R.color.gray) { val d = dayDiff(it.expirationDate); d != null && d > 365L }
-        addGroup("No expiry date", R.color.gray) { it.expirationDate == null }
+        if (reverseOrder) {
+            addGroup("No expiry date", R.color.gray) { it.expirationDate == null }
+            addGroup("Expiring in 1+ year", R.color.gray) { val d = dayDiff(it.expirationDate); d != null && d > 365L }
+            addGroup("Expiring in 3-12 months", R.color.purple) { val d = dayDiff(it.expirationDate); d != null && d in 91L..365L }
+            addGroup("Expiring in 15-90 days", R.color.teal_200) { val d = dayDiff(it.expirationDate); d != null && d in 15L..90L }
+            addGroup("Expiring in 4-14 days", R.color.blue) { val d = dayDiff(it.expirationDate); d != null && d in 4L..14L }
+            addGroup("Expiring in 2-3 days", R.color.green) { val d = dayDiff(it.expirationDate); d != null && d in 2L..3L }
+            addGroup("Expiring tomorrow", R.color.yellow) { val d = dayDiff(it.expirationDate); d != null && d == 1L }
+            addGroup("Expiring today", R.color.orange) { val d = dayDiff(it.expirationDate); d != null && d == 0L }
+            addGroup("Expired", R.color.red) { val d = dayDiff(it.expirationDate); d != null && d < 0 }
+        } else {
+            addGroup("Expired", R.color.red) { val d = dayDiff(it.expirationDate); d != null && d < 0 }
+            addGroup("Expiring today", R.color.orange) { val d = dayDiff(it.expirationDate); d != null && d == 0L }
+            addGroup("Expiring tomorrow", R.color.yellow) { val d = dayDiff(it.expirationDate); d != null && d == 1L }
+            addGroup("Expiring in 2-3 days", R.color.green) { val d = dayDiff(it.expirationDate); d != null && d in 2L..3L }
+            addGroup("Expiring in 4-14 days", R.color.blue) { val d = dayDiff(it.expirationDate); d != null && d in 4L..14L }
+            addGroup("Expiring in 15-90 days", R.color.teal_200) { val d = dayDiff(it.expirationDate); d != null && d in 15L..90L }
+            addGroup("Expiring in 3-12 months", R.color.purple) { val d = dayDiff(it.expirationDate); d != null && d in 91L..365L }
+            addGroup("Expiring in 1+ year", R.color.gray) { val d = dayDiff(it.expirationDate); d != null && d > 365L }
+            addGroup("No expiry date", R.color.gray) { it.expirationDate == null }
+        }
 
         return grouped
     }

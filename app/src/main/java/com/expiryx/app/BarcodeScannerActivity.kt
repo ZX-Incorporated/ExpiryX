@@ -188,7 +188,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             name = name,
                             expirationDate = null,
                             quantity = 1,
-                            reminderDays = 3, // A sensible default
+                            reminderDays = 7, // Default reminder period
                             brand = brand,
                             weight = weight,
                             imageUri = imageUrl,

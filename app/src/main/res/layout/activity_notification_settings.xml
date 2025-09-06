@@ -135,6 +135,7 @@
                             android:text="Reminder Intervals" />
 
                         <TextView
+                            android:id="@+id/intervalsSubtitle" 
                             style="@style/SettingsSubtitle"
                             android:text="1 day before, on expiry" />
                     </LinearLayout>

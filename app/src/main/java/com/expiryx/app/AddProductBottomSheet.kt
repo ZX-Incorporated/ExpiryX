@@ -145,7 +145,7 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                         name = name,
                         expirationDate = null,
                         quantity = 1,
-                        reminderDays = 3, // A sensible default
+                        reminderDays = 7, // Default reminder period
                         brand = prod.optString("brands", "").takeIf { it.isNotBlank() },
                         weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
                         imageUri = apiImage ?: uploadedImage.toString(),

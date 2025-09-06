@@ -15,7 +15,7 @@ data class Product(
     val brand: String? = null,
     val weight: String? = null,
     val imageUri: String? = null,
-    val reminderDays: Int = 3,
+    val reminderDays: Int = 7, // Updated default to 7 days
     val isFavorite: Boolean = false
     // ✅ FIX: Removed the 'isUsed' field as it's no longer needed.
     // Used products are now moved directly to the history table.

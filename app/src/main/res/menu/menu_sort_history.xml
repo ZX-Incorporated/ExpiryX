@@ -14,8 +14,12 @@
         android:title="Expired first" />
 
     <item
-        android:id="@+id/sort_name"
+        android:id="@+id/sort_name_asc"
         android:title="Name (A → Z)" />
+
+    <item
+        android:id="@+id/sort_name_desc"
+        android:title="Name (Z → A)" />
 
     <item
         android:id="@+id/sort_quantity_asc"

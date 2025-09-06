@@ -1,57 +1,111 @@
 package com.expiryx.app
 
 import android.content.Context
-import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
 object NotificationScheduler {
 
-    private const val TYPE_7_DAYS = "7days"
-    private const val TYPE_1_DAY = "1day"
-    private const val TYPE_TODAY = "today"
-    private const val TYPE_EXPIRED = "expired"
-    private const val NOTIFY_HOUR = 9 // 9AM local time
+    // These are the values for reminder intervals stored in Prefs and used in NotificationSettingsActivity
+    internal val POSSIBLE_INTERVAL_VALUES = arrayOf("0", "1", "3", "7", "14") // Changed to internal
+    internal const val EXPIRED_NOTICE_TYPE = "expired_notice" // Changed to internal
 
     fun scheduleForProduct(context: Context, product: Product) {
-        val expiry = product.expirationDate ?: return
+        // 1. Check global notification master switch
+        if (!Prefs.isNotificationsEnabled(context)) {
+            cancelForProduct(context, product) // Clear any existing for this product
+            return
+        }
+
+        // 2. Check global snooze setting
+        if (Prefs.isSnoozeActive(context)) {
+            // If snoozed, don't schedule new notifications.
+            return
+        }
+
+        val expiryDate = product.expirationDate ?: return // Must have an expiry date
+
+        cancelForProduct(context, product)
+
         val now = System.currentTimeMillis()
+        val defaultHour = Prefs.getDefaultHour(context)
+        val defaultMinute = Prefs.getDefaultMinute(context)
 
-        // day boundaries
-        val startExpiry = startOfDay(expiry)
-        val startToday = startOfDay(now)
+        val startOfExpiryDay = startOfDay(expiryDate)
+        val startOfToday = startOfDay(now)
 
-        // compute intended schedule times (9am)
-        val at7 = atHour(startExpiry - daysMs(7), NOTIFY_HOUR)
-        val at1 = atHour(startExpiry - daysMs(1), NOTIFY_HOUR)
-        val atToday9 = atHour(startExpiry, NOTIFY_HOUR)
+        if (startOfExpiryDay < startOfToday) {
+            enqueueImmediate(context, product, EXPIRED_NOTICE_TYPE)
+            return
+        }
 
-        // expired?
-        if (startExpiry < startToday) {
-            enqueueImmediate(context, product, TYPE_EXPIRED)
-        } else if (startExpiry == startToday) {
-            // due today
-            if (atToday9 > now) {
-                scheduleAt(context, product, TYPE_TODAY, atToday9, now)
-            } else {
-                enqueueImmediate(context, product, TYPE_TODAY)
+        val selectedIntervalsDays = Prefs.getReminderIntervals(context)
+            .mapNotNull { it.toIntOrNull() }
+            .sorted()
+
+        for (daysBefore in selectedIntervalsDays) {
+            val notificationTimeCal = Calendar.getInstance().apply {
+                timeInMillis = startOfExpiryDay
+                add(Calendar.DAY_OF_YEAR, -daysBefore)
+                set(Calendar.HOUR_OF_DAY, defaultHour)
+                set(Calendar.MINUTE, defaultMinute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
             }
-        } else {
-            // future day
-            if (at7 > now) scheduleAt(context, product, TYPE_7_DAYS, at7, now)
-            if (at1 > now) scheduleAt(context, product, TYPE_1_DAY, at1, now)
-            if (atToday9 > now) scheduleAt(context, product, TYPE_TODAY, atToday9, now)
+            val notificationTime = notificationTimeCal.timeInMillis
+            val messageType = "interval_$daysBefore"
+
+            if (notificationTime > now) {
+                scheduleAt(context, product, messageType, notificationTime, now)
+            } else if (daysBefore == 0 && startOfDay(notificationTime) == startOfToday) {
+                enqueueImmediate(context, product, messageType)
+            }
         }
     }
 
     fun cancelForProduct(context: Context, product: Product) {
-        cancelUnique(context, uniqueName(product.id, TYPE_7_DAYS))
-        cancelUnique(context, uniqueName(product.id, TYPE_1_DAY))
-        cancelUnique(context, uniqueName(product.id, TYPE_TODAY))
-        cancelUnique(context, uniqueName(product.id, TYPE_EXPIRED))
+        POSSIBLE_INTERVAL_VALUES.forEach { day ->
+            cancelUnique(context, uniqueName(product.id, "interval_$day"))
+        }
+        cancelUnique(context, uniqueName(product.id, EXPIRED_NOTICE_TYPE))
+        cancelUnique(context, uniqueName(product.id, "snooze"))
+    }
+
+    fun rescheduleAllNotifications(context: Context, products: List<Product>) {
+        products.forEach { product ->
+            cancelForProduct(context, product)
+        }
+        products.forEach { product ->
+            scheduleForProduct(context, product)
+        }
+    }
+
+    fun scheduleSnooze(context: Context, productId: Int, snoozeDays: Int, title: String, message: String) {
+        val now = System.currentTimeMillis()
+        val snoozeTime = now + daysMs(snoozeDays)
+
+        val input = NotificationWorker.Input(
+            productId = productId,
+            productName = title,
+            messageType = "snooze",
+            message = message
+        ).toData()
+
+        val req = OneTimeWorkRequestBuilder<NotificationWorker>()
+            .setInputData(input)
+            .setInitialDelay(snoozeTime - now, TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                uniqueName(productId, "snooze"),
+                ExistingWorkPolicy.REPLACE,
+                req
+            )
     }
 
     private fun scheduleAt(
@@ -110,24 +164,12 @@ object NotificationScheduler {
     private fun daysMs(d: Int) = d * 24L * 60 * 60 * 1000
 
     private fun startOfDay(ts: Long): Long {
-        val cal = java.util.Calendar.getInstance().apply {
+        return Calendar.getInstance().apply {
             timeInMillis = ts
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-        return cal.timeInMillis
-    }
-
-    private fun atHour(dayStart: Long, hour24: Int): Long {
-        val cal = java.util.Calendar.getInstance().apply {
-            timeInMillis = dayStart
-            set(java.util.Calendar.HOUR_OF_DAY, hour24)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }
-        return cal.timeInMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
     }
 }

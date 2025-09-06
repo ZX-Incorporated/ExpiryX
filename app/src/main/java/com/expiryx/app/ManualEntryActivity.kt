@@ -147,7 +147,7 @@ class ManualEntryActivity : AppCompatActivity() {
 
         val brand = binding.editTextBrand.text.toString().trim().takeIf { it.isNotBlank() }
         val qty = binding.editTextQuantity.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val reminder = binding.editTextReminder.text.toString().toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val reminder = binding.editTextReminder.text.toString().toIntOrNull()?.coerceAtLeast(0) ?: 7
         val weight = binding.editTextWeight.text.toString().trim().takeIf { it.isNotBlank() }
 
         val product = Product(
@@ -162,11 +162,17 @@ class ManualEntryActivity : AppCompatActivity() {
             isFavorite = binding.checkboxFavorite.isChecked
         )
 
-        if (editingProduct != null) {
+        val currentEditingProduct = editingProduct
+        if (currentEditingProduct != null && currentEditingProduct.id != 0) { // Modified condition
             productViewModel.update(product)
+            // Cancel old notifications and schedule new ones for updated product
+            NotificationScheduler.cancelForProduct(this, currentEditingProduct)
+            NotificationScheduler.scheduleForProduct(this, product)
             Toast.makeText(this, "Product updated", Toast.LENGTH_SHORT).show()
         } else {
             productViewModel.insert(product)
+            // Schedule notifications for new product
+            NotificationScheduler.scheduleForProduct(this, product)
             Toast.makeText(this, "Product saved", Toast.LENGTH_SHORT).show()
         }
         finish()
