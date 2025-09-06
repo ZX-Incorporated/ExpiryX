@@ -1,4 +1,3 @@
-// app/src/main/java/com/expiryx/app/Prefs.kt
 package com.expiryx.app
 
 import android.content.Context

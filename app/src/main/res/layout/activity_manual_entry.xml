@@ -41,6 +41,7 @@
             android:src="@drawable/ic_placeholder"
             android:contentDescription="Product image preview" />
 
+        <!-- Product Name -->
         <EditText
             android:id="@+id/editTextProductName"
             android:layout_width="match_parent"
@@ -50,6 +51,18 @@
             android:imeOptions="actionNext"
             android:padding="14dp" />
 
+        <!-- Brand (just below name visually) -->
+        <EditText
+            android:id="@+id/editTextBrand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="Brand"
+            android:imeOptions="actionNext"
+            android:padding="14dp" />
+
+        <!-- Expiry Date -->
         <EditText
             android:id="@+id/editTextExpirationDate"
             android:layout_width="match_parent"
@@ -61,6 +74,7 @@
             android:focusable="false"
             android:clickable="true" />
 
+        <!-- Quantity -->
         <EditText
             android:id="@+id/editTextQuantity"
             android:layout_width="match_parent"
@@ -71,6 +85,7 @@
             android:background="@drawable/edit_text_background"
             android:padding="14dp"/>
 
+        <!-- Reminder -->
         <EditText
             android:id="@+id/editTextReminder"
             android:layout_width="match_parent"
@@ -81,24 +96,15 @@
             android:background="@drawable/edit_text_background"
             android:padding="14dp"/>
 
+        <!-- Weight (grams only) -->
         <EditText
             android:id="@+id/editTextWeight"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:hint="Product Weight (e.g. 500g)"
+            android:hint="Weight (grams, e.g. 500 g)"
             android:background="@drawable/edit_text_background"
-            android:padding="14dp"/>
-
-        <EditText
-            android:id="@+id/editTextNotes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="Optional Notes"
-            android:inputType="textMultiLine"
-            android:minLines="3"
-            android:background="@drawable/edit_text_background"
+            android:inputType="text"
             android:padding="14dp"/>
 
         <CheckBox

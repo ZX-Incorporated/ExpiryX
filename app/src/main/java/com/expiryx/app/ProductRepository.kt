@@ -30,7 +30,7 @@ class ProductRepository(
                 expirationDate = product.expirationDate,
                 quantity = product.quantity,
                 weight = product.weight,
-                notes = product.notes,
+                brand = product.brand, // Updated to use 'brand'
                 imageUri = product.imageUri,
                 isFavorite = product.isFavorite,
                 action = "Deleted",
@@ -40,23 +40,22 @@ class ProductRepository(
     }
 
     suspend fun markAsUsed(product: Product) {
-        val existing = historyDao.findByProductAndAction(product.id, "Used")
-        if (existing == null) {
-            historyDao.insert(
-                History(
-                    productId = product.id,
-                    productName = product.name,
-                    expirationDate = product.expirationDate,
-                    quantity = product.quantity,
-                    weight = product.weight,
-                    notes = product.notes,
-                    imageUri = product.imageUri,
-                    isFavorite = product.isFavorite,
-                    action = "Used",
-                    timestamp = System.currentTimeMillis()
-                )
+        // Always archive into history
+        historyDao.insert(
+            History(
+                productId = product.id,
+                productName = product.name,
+                expirationDate = product.expirationDate,
+                quantity = product.quantity,
+                weight = product.weight,
+                brand = product.brand, // Updated to use 'brand'
+                imageUri = product.imageUri,
+                isFavorite = product.isFavorite,
+                action = "Used",
+                timestamp = System.currentTimeMillis()
             )
-        }
+        )
+        // Remove from active list
         productDao.delete(product)
     }
 
@@ -66,23 +65,20 @@ class ProductRepository(
         for (p in all) {
             val expiry = p.expirationDate ?: continue
             if (now - expiry >= 7 * 24 * 60 * 60 * 1000) {
-                val existing = historyDao.findByProductAndAction(p.id, "Expired")
-                if (existing == null) {
-                    historyDao.insert(
-                        History(
-                            productId = p.id,
-                            productName = p.name,
-                            expirationDate = p.expirationDate,
-                            quantity = p.quantity,
-                            weight = p.weight,
-                            notes = p.notes,
-                            imageUri = p.imageUri,
-                            isFavorite = p.isFavorite,
-                            action = "Expired",
-                            timestamp = now
-                        )
+                historyDao.insert(
+                    History(
+                        productId = p.id,
+                        productName = p.name,
+                        expirationDate = p.expirationDate,
+                        quantity = p.quantity,
+                        weight = p.weight,
+                        brand = p.brand, // Updated to use 'brand'
+                        imageUri = p.imageUri,
+                        isFavorite = p.isFavorite,
+                        action = "Expired",
+                        timestamp = now
                     )
-                }
+                )
                 productDao.delete(p)
             }
         }
@@ -91,7 +87,6 @@ class ProductRepository(
     suspend fun getAllProductsNow(): List<Product> = productDao.getAllProductsNow()
     suspend fun getAllHistoryNow(): List<History> = historyDao.getAllHistoryNow()
 
-    // ✅ new methods used in SettingsActivity
     suspend fun clearAllProducts() = productDao.clearAllProducts()
     suspend fun clearAllHistory() = historyDao.clearAllHistory()
 
@@ -106,7 +101,7 @@ class ProductRepository(
             expirationDate = history.expirationDate,
             quantity = history.quantity,
             weight = history.weight,
-            notes = history.notes,
+            brand = history.brand, // Updated to use 'brand'
             imageUri = history.imageUri,
             isFavorite = history.isFavorite
         )
@@ -121,12 +116,11 @@ class ProductRepository(
             expirationDate = newExpiry,
             quantity = history.quantity,
             weight = history.weight,
-            notes = history.notes,
+            brand = history.brand, // Updated to use 'brand'
             imageUri = history.imageUri,
             isFavorite = history.isFavorite
         )
         productDao.insert(product)
         historyDao.deleteById(history.id)
     }
-
 }

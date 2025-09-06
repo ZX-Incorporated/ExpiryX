@@ -1,4 +1,3 @@
-// app/src/main/java/com/expiryx/app/ProductApplication.kt
 package com.expiryx.app
 
 import android.app.Application

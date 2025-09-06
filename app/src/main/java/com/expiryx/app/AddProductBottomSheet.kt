@@ -9,11 +9,11 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,7 +39,7 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
         } catch (_: SecurityException) {
-            // Some providers don't support persistable permission; ignore gracefully.
+            // Ignore gracefully
         }
         analyseImageForBarcode(uri)
     }
@@ -84,10 +84,10 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
             val image = InputImage.fromFilePath(requireContext(), uri)
             val options = BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(
-                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
-                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
-                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
-                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_E
+                    Barcode.FORMAT_EAN_13,
+                    Barcode.FORMAT_EAN_8,
+                    Barcode.FORMAT_UPC_A,
+                    Barcode.FORMAT_UPC_E
                 ).build()
             val scanner = BarcodeScanning.getClient(options)
 
@@ -98,20 +98,12 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                         fetchProductInfo(code, uri)
                     } else {
                         showLoading(false)
-                        Toast.makeText(
-                            requireContext(),
-                            "No barcode found in image",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), "No barcode found in image", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .addOnFailureListener {
                     showLoading(false)
-                    Toast.makeText(
-                        requireContext(),
-                        "Failed to analyse image",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Failed to analyse image", Toast.LENGTH_SHORT).show()
                 }
         } catch (e: Exception) {
             showLoading(false)
@@ -121,12 +113,11 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
 
     private fun fetchProductInfo(barcode: String, uploadedImage: Uri) {
         val client = OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .callTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
             .build()
         val request = Request.Builder()
-            .url("https://world.openfoodfacts.org/api/v0/product/$barcode.json")
+            .url("https://world.openfoodfacts.org/api/v2/product/$barcode.json")
             .build()
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -138,49 +129,29 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
 
                 if (body == null) {
                     showLoading(false)
-                    Toast.makeText(requireContext(), "Product not found", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Product not found in database", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
                 val json = JSONObject(body)
                 if (json.optInt("status") == 1) {
                     val prod = json.getJSONObject("product")
-                    val apiImage = prod.optString("image_url", null)
                     val name = prod.optString("product_name", "").trim()
+                    val apiImage = prod.optString("image_url", null)
 
-                    // If name is blank, jump to manual entry but carry image + barcode
-                    if (name.isEmpty()) {
-                        showLoading(false)
-                        val intent = Intent(requireContext(), ManualEntryActivity::class.java).apply {
-                            putExtra("isEdit", false)
-                            putExtra("product", Product(
-                                id = 0,
-                                name = "",
-                                expirationDate = null,
-                                quantity = 1,
-                                reminderDays = 0,
-                                notes = prod.optString("brands", "").takeIf { it.isNotBlank() },
-                                weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
-                                imageUri = apiImage ?: uploadedImage.toString(),
-                                isFavorite = false
-                            ))
-                        }
-                        startActivity(intent)
-                        dismissAllowingStateLoss()
-                        return@launch
-                    }
-
+                    // ✅ FIX: Changed 'notes' to 'brand'
                     val product = Product(
                         id = 0,
                         name = name,
                         expirationDate = null,
                         quantity = 1,
-                        reminderDays = 0,
-                        notes = prod.optString("brands", "").takeIf { it.isNotBlank() },
+                        reminderDays = 3, // A sensible default
+                        brand = prod.optString("brands", "").takeIf { it.isNotBlank() },
                         weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
                         imageUri = apiImage ?: uploadedImage.toString(),
                         isFavorite = false
                     )
+
                     showLoading(false)
                     val intent = Intent(requireContext(), ManualEntryActivity::class.java).apply {
                         putExtra("product", product)
@@ -188,17 +159,14 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                     }
                     startActivity(intent)
                     dismissAllowingStateLoss()
+
                 } else {
                     showLoading(false)
-                    Toast.makeText(requireContext(), "Product not found", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Product not found in database", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 showLoading(false)
-                Toast.makeText(
-                    requireContext(),
-                    "Error fetching product info",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Error fetching product info", Toast.LENGTH_SHORT).show()
             }
         }
     }

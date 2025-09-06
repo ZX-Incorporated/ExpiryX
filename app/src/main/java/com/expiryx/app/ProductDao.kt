@@ -14,17 +14,20 @@ interface ProductDao {
     @Delete
     suspend fun delete(product: Product)
 
-    @Query("SELECT * FROM product_table ORDER BY expirationDate ASC")
-    fun getAllProducts(): LiveData<List<Product>>
-
-    @Query("SELECT * FROM product_table WHERE isFavorite = 1 ORDER BY expirationDate ASC")
-    fun getFavoriteProducts(): LiveData<List<Product>>
-
-    // ✅ synchronous list query
-    @Query("SELECT * FROM product_table ORDER BY expirationDate ASC")
-    suspend fun getAllProductsNow(): List<Product>
-
-    // ✅ new clear all
     @Query("DELETE FROM product_table")
     suspend fun clearAllProducts()
+
+    @Query("""
+        SELECT * FROM product_table 
+        ORDER BY 
+            CASE WHEN expirationDate IS NULL THEN 1 ELSE 0 END,
+            expirationDate ASC
+    """)
+    fun getAllProducts(): LiveData<List<Product>>
+
+    @Query("SELECT * FROM product_table")
+    suspend fun getAllProductsNow(): List<Product>
+
+    @Query("SELECT * FROM product_table WHERE id = :id LIMIT 1")
+    suspend fun getProductById(id: Int): Product?
 }

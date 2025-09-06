@@ -4,7 +4,6 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
 class HistoryViewModel(private val repository: ProductRepository) : ViewModel() {
-
     val allHistory: LiveData<List<History>> = repository.allHistory
 
     fun permanentlyDelete(history: History) = viewModelScope.launch {
@@ -24,7 +23,8 @@ class HistoryViewModel(private val repository: ProductRepository) : ViewModel() 
     }
 }
 
-class HistoryViewModelFactory(private val repository: ProductRepository) : ViewModelProvider.Factory {
+class HistoryViewModelFactory(private val repository: ProductRepository) :
+    ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HistoryViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

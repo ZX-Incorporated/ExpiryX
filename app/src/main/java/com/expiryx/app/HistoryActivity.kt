@@ -8,23 +8,22 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.expiryx.app.databinding.ActivityHistoryBinding
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.appcompat.app.AlertDialog
-
 
 class HistoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHistoryBinding
     private lateinit var adapter: HistoryAdapter
 
+    // ✅ FIX: Removed 'private' to allow access from BottomSheet
     val viewModel: HistoryViewModel by viewModels {
         HistoryViewModelFactory((application as ProductApplication).repository)
     }
-
 
     private var fullList: List<History> = emptyList()
     private var sortIndex: Int = 0
@@ -35,19 +34,18 @@ class HistoryActivity : AppCompatActivity() {
     private var showDeleted = true
     private var onlyFavourites = false
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // highlight nav icons
+        // Highlight nav icons
         binding.navHome.setImageResource(R.drawable.ic_home_unfilled)
         binding.navCart.setImageResource(R.drawable.ic_cart)
         binding.navHistory.setImageResource(R.drawable.ic_clock_filled)
         binding.navSettings.setImageResource(R.drawable.ic_settings_unfilled)
 
-        // setup RecyclerView
+        // Setup RecyclerView
         adapter = HistoryAdapter(
             emptyList(),
             onItemClick = { h -> HistoryDetailBottomSheet.newInstance(h).show(supportFragmentManager, "HistoryDetail") },
@@ -61,17 +59,15 @@ class HistoryActivity : AppCompatActivity() {
             }
         )
 
-
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = adapter
 
         setupSearch()
         setupSort()
-        setupFilter()   // <-- missing
+        setupFilter()
         setupBottomNav()
 
-
-        // observe data
+        // Observe data
         viewModel.allHistory.observe(this) { list ->
             fullList = list ?: emptyList()
             applyFilters()
@@ -82,13 +78,11 @@ class HistoryActivity : AppCompatActivity() {
     private fun setupSearch() {
         binding.btnSearch.setOnClickListener { openSearch() }
 
-        // close icon (X) tapped in SearchView
         binding.searchViewHistory.setOnCloseListener {
             closeSearch()
             true
         }
 
-        // if search loses focus and empty, close it
         binding.searchViewHistory.setOnQueryTextFocusChangeListener { _, hasFocus ->
             if (!hasFocus && searchQuery.isEmpty()) closeSearch()
         }
@@ -110,12 +104,10 @@ class HistoryActivity : AppCompatActivity() {
     }
 
     private fun openSearch() {
-        // keep topBar visible — show search below it
         binding.searchViewHistory.visibility = View.VISIBLE
         binding.searchViewHistory.isIconified = false
         binding.searchViewHistory.requestFocus()
 
-        // hide counters + sort while searching
         binding.countersLayout.visibility = View.GONE
         binding.layoutSortHistory.root.visibility = View.GONE
 
@@ -127,7 +119,6 @@ class HistoryActivity : AppCompatActivity() {
         binding.searchViewHistory.clearFocus()
         binding.searchViewHistory.visibility = View.GONE
 
-        // restore counters + sort row
         binding.countersLayout.visibility = View.VISIBLE
         binding.layoutSortHistory.root.visibility = View.VISIBLE
 
@@ -164,8 +155,6 @@ class HistoryActivity : AppCompatActivity() {
                     R.id.sort_name -> 3
                     R.id.sort_quantity_asc -> 4
                     R.id.sort_quantity_desc -> 5
-                    R.id.sort_expiry_soon -> 6
-                    R.id.sort_expiry_late -> 7
                     R.id.sort_favourites -> 8
                     else -> 0
                 }
@@ -188,7 +177,7 @@ class HistoryActivity : AppCompatActivity() {
             Toast.makeText(this, "Store coming soon…", Toast.LENGTH_SHORT).show()
         }
         binding.navHistoryWrapper.setOnClickListener {
-            // already here
+            // Already here
         }
         binding.navSettingsWrapper.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
@@ -197,15 +186,12 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
-
     // ---------- FILTERS & SORT ----------
-
     private fun setupFilter() {
         binding.btnFilter.setOnClickListener { v ->
             val popup = PopupMenu(this, v)
             popup.menuInflater.inflate(R.menu.menu_filter_history, popup.menu)
 
-            // reflect current state
             popup.menu.findItem(R.id.filter_expired).isChecked = showExpired
             popup.menu.findItem(R.id.filter_consumed).isChecked = showConsumed
             popup.menu.findItem(R.id.filter_deleted).isChecked = showDeleted
@@ -214,7 +200,7 @@ class HistoryActivity : AppCompatActivity() {
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.filter_expired -> {
-                        if (!(showConsumed || showDeleted)) {
+                        if (showExpired && !(showConsumed || showDeleted)) {
                             Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
                         } else {
                             showExpired = !showExpired
@@ -223,7 +209,7 @@ class HistoryActivity : AppCompatActivity() {
                         }
                     }
                     R.id.filter_consumed -> {
-                        if (!(showExpired || showDeleted)) {
+                        if (showConsumed && !(showExpired || showDeleted)) {
                             Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
                         } else {
                             showConsumed = !showConsumed
@@ -232,7 +218,7 @@ class HistoryActivity : AppCompatActivity() {
                         }
                     }
                     R.id.filter_deleted -> {
-                        if (!(showExpired || showConsumed)) {
+                        if (showDeleted && !(showExpired || showConsumed)) {
                             Toast.makeText(this, "At least one type must be selected", Toast.LENGTH_SHORT).show()
                         } else {
                             showDeleted = !showDeleted
@@ -246,6 +232,8 @@ class HistoryActivity : AppCompatActivity() {
                         applyFilters()
                     }
                 }
+                // Return true to close the menu, false to keep it open.
+                // The default behavior is to close, which is fine here.
                 true
             }
             popup.show()
@@ -253,7 +241,7 @@ class HistoryActivity : AppCompatActivity() {
     }
 
     private fun applyFilters() {
-        var filtered = fullList.distinctBy { it.productId to it.action to it.timestamp }
+        var filtered = fullList
 
         // Type filter
         filtered = filtered.filter { h ->
@@ -269,39 +257,36 @@ class HistoryActivity : AppCompatActivity() {
 
         // Search filter
         if (searchQuery.isNotBlank()) {
-            val q = searchQuery.trim()
-            val qLower = q.lowercase(Locale.getDefault())
+            val qLower = searchQuery.lowercase(Locale.getDefault())
             filtered = filtered.filter { h ->
-                val nameMatch = h.productName.contains(q, ignoreCase = true)
-                val actionMatch = h.action.contains(q, ignoreCase = true)
-                val notesMatch = h.notes?.contains(q, ignoreCase = true) ?: false
-                val weightMatch = h.weight?.contains(q, ignoreCase = true) ?: false
-                val quantityMatch = h.quantity.toString().contains(q)
-                val expiryMatch = h.expirationDate?.let { formatDate(it).lowercase(Locale.getDefault()).contains(qLower) } ?: false
-                val timestampMatch = formatDateTime(h.timestamp).lowercase(Locale.getDefault()).contains(qLower)
+                val nameMatch = h.productName.contains(qLower, ignoreCase = true)
+                val actionMatch = h.action.contains(qLower, ignoreCase = true)
+                val brandMatch = h.brand?.contains(qLower, ignoreCase = true) ?: false
+                val weightMatch = h.weight?.contains(qLower, ignoreCase = true) ?: false
+                val quantityMatch = h.quantity.toString().contains(qLower)
+                val expiryMatch = h.expirationDate?.let { formatDate(it).contains(qLower) } ?: false
+                val timestampMatch = formatDateTime(h.timestamp).contains(qLower)
 
-                nameMatch || actionMatch || notesMatch || weightMatch || quantityMatch || expiryMatch || timestampMatch
+                nameMatch || actionMatch || brandMatch || weightMatch || quantityMatch || expiryMatch || timestampMatch
             }
         }
 
-        // Sorting (unchanged)
+        // Sorting
         filtered = when (sortIndex) {
             0 -> filtered.sortedByDescending { it.timestamp }
             1 -> filtered.sortedBy { it.timestamp }
-            2 -> filtered.sortedByDescending { it.action == "Expired" }
+            // ✅ IMPROVED: Added secondary sort by timestamp for consistent ordering
+            2 -> filtered.sortedWith(compareByDescending<History> { it.action == "Expired" }.thenByDescending { it.timestamp })
             3 -> filtered.sortedBy { it.productName.lowercase(Locale.getDefault()) }
             4 -> filtered.sortedBy { it.quantity }
             5 -> filtered.sortedByDescending { it.quantity }
-            6 -> filtered.sortedBy { it.expirationDate ?: Long.MAX_VALUE }
-            7 -> filtered.sortedByDescending { it.expirationDate ?: Long.MIN_VALUE }
-            8 -> filtered.sortedByDescending { it.isFavorite }
-            else -> filtered
+            // ✅ IMPROVED: Added secondary sort by timestamp for consistent ordering
+            8 -> filtered.sortedWith(compareByDescending<History> { it.isFavorite }.thenByDescending { it.timestamp })
+            else -> filtered.sortedByDescending { it.timestamp } // Default case
         }
 
         updateUI(filtered)
     }
-
-
 
     private fun updateUI(list: List<History>) {
         adapter.updateData(list)
@@ -320,7 +305,6 @@ class HistoryActivity : AppCompatActivity() {
         } else {
             binding.recyclerHistory.visibility = View.GONE
 
-            // Pick correct placeholder
             when {
                 searchQuery.isNotEmpty() -> {
                     binding.historyNoResults.visibility = View.VISIBLE
@@ -340,7 +324,6 @@ class HistoryActivity : AppCompatActivity() {
             }
         }
 
-
         if (!isSearching) {
             val expiredCount = fullList.count { it.action == "Expired" }
             val usedCount = fullList.count { it.action == "Used" }
@@ -352,7 +335,6 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
-
     // ---------- Helpers ----------
     private fun formatDate(millis: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -363,5 +345,4 @@ class HistoryActivity : AppCompatActivity() {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
     }
-
 }

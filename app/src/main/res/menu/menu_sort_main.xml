@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/sort_expiry_soon"
+        android:title="Expiry Soonest" />
+    <item
+        android:id="@+id/sort_expiry_late"
+        android:title="Expiry Latest" />
+    <item
+        android:id="@+id/sort_name_asc"
+        android:title="Name A–Z" />
+    <item
+        android:id="@+id/sort_name_desc"
+        android:title="Name Z–A" />
+    <item
+        android:id="@+id/sort_quantity_asc"
+        android:title="Quantity Low→High" />
+    <item
+        android:id="@+id/sort_quantity_desc"
+        android:title="Quantity High→Low" />
+    <item
+        android:id="@+id/sort_favourites"
+        android:title="Favorites First" />
+</menu>

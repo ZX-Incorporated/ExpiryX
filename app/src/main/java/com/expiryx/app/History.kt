@@ -14,7 +14,7 @@ data class History(
     val expirationDate: Long?,
     val quantity: Int = 1,
     val weight: String? = null,
-    val notes: String? = null,
+    val brand: String? = null,
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
     val action: String, // "Expired", "Used", "Deleted"

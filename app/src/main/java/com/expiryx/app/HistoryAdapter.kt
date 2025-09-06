@@ -53,7 +53,6 @@ class HistoryAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    // ✅ Renamed to match HistoryActivity
     fun updateData(newItems: List<History>) {
         items = newItems
         notifyDataSetChanged()

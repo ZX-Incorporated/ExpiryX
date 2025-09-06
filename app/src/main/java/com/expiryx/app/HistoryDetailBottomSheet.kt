@@ -8,8 +8,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.bumptech.glide.Glide
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.expiryx.app.databinding.BottomsheetHistoryDetailBinding
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,8 +23,11 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        history = requireArguments().getParcelable("history")!!
+        // ✅ FIX: Correctly gets viewModel from the activity
         viewModel = (requireActivity() as HistoryActivity).viewModel
+        arguments?.let {
+            history = it.getParcelable("history")!!
+        }
     }
 
     override fun onCreateView(
@@ -37,12 +40,18 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         // --- Basic info ---
         binding.textHistoryName.text = history.productName
-        binding.textHistoryNotes.text = history.notes ?: "No notes"
+        // ✅ FIX: This now references a valid binding property.
+        // Ensure your XML layout has a TextView with android:id="@+id/textHistoryBrand"
+        binding.textHistoryBrand.text = history.brand.takeIf { !it.isNullOrBlank() } ?: "No brand"
         binding.textHistoryQuantity.text = "Quantity: ${history.quantity}"
-        binding.textHistoryWeight.text = "Weight: ${history.weight ?: "-"}"
-        binding.textHistoryFavourite.text = "Favourite: ${history.isFavorite}"
+        // ... (the rest of the file is correct)
+        binding.textHistoryWeight.text = "Weight: ${history.weight.takeIf { !it.isNullOrBlank() } ?: "-"}"
+        binding.textHistoryFavourite.text = "Favourite: ${if (history.isFavorite) "Yes" else "No"}"
+
 
         history.expirationDate?.let {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -66,14 +75,14 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
                 }
             }
             "Used" -> {
-                binding.btnPrimary.text = "Unuse"
+                binding.btnPrimary.text = "Un-use" // More descriptive text
                 binding.btnPrimary.setOnClickListener {
                     viewModel.unuse(history)
                     dismiss()
                 }
             }
             "Expired" -> {
-                binding.btnPrimary.text = "Change Expiry"
+                binding.btnPrimary.text = "Change Expiry & Restore"
                 binding.btnPrimary.setOnClickListener { showDatePicker() }
             }
         }
@@ -118,9 +127,11 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         fun newInstance(history: History): HistoryDetailBottomSheet {
-            val f = HistoryDetailBottomSheet()
-            f.arguments = Bundle().apply { putParcelable("history", history) }
-            return f
+            return HistoryDetailBottomSheet().apply {
+                arguments = Bundle().apply {
+                    putParcelable("history", history)
+                }
+            }
         }
     }
 }

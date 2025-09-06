@@ -17,11 +17,9 @@ interface HistoryDao {
     @Query("SELECT * FROM history_table ORDER BY timestamp DESC")
     suspend fun getAllHistoryNow(): List<History>
 
-    // ✅ new clear all
     @Query("DELETE FROM history_table")
     suspend fun clearAllHistory()
 
     @Query("DELETE FROM history_table WHERE id = :id")
     suspend fun deleteById(id: Int)
-
 }

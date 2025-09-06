@@ -10,7 +10,6 @@
     android:orientation="horizontal"
     android:gravity="center_vertical">
 
-    <!-- Product image -->
     <ImageView
         android:id="@+id/imageProduct"
         android:layout_width="60dp"
@@ -21,7 +20,6 @@
         android:src="@drawable/ic_placeholder"
         android:contentDescription="Product image" />
 
-    <!-- Text section -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -38,12 +36,13 @@
             android:textColor="@android:color/black" />
 
         <TextView
-            android:id="@+id/textProductNotes"
+            android:id="@+id/textProductBrand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Notes or brand"
+            android:text="Brand / Weight"
             android:textSize="14sp"
             android:textColor="#666666" />
+
 
         <TextView
             android:id="@+id/textProductQuantity"
@@ -54,7 +53,6 @@
             android:textColor="#444444" />
     </LinearLayout>
 
-    <!-- Favorite button (PNG, no tint, no stretch) -->
     <ImageButton
         android:id="@+id/btnFavorite"
         android:layout_width="40dp"
