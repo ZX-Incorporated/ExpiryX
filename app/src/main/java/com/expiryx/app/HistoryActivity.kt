@@ -54,12 +54,13 @@ class HistoryActivity : AppCompatActivity() {
             onItemLongPress = { h ->
                 AlertDialog.Builder(this)
                     .setTitle("Permanently Delete")
-                    .setMessage("Remove ${h.productName} from history?")
+                    .setMessage("Are you sure you want to permanently delete ${h.productName}? This cannot be undone.")
                     .setPositiveButton("Delete") { _, _ -> viewModel.permanentlyDelete(h) }
                     .setNegativeButton("Cancel", null)
                     .show()
             }
         )
+
 
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = adapter
