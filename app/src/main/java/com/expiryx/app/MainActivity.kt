@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.expiryx.app.databinding.ActivityMainBinding
-import com.google.android.material.bottomsheet.BottomSheetDialog
+// import com.google.android.material.bottomsheet.BottomSheetDialog // Not used directly, can be removed if not needed elsewhere
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -55,7 +55,6 @@ class MainActivity : AppCompatActivity() {
             try {
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             } catch (_: SecurityException) {}
-            // Launch AddProductBottomSheet with the selected URI using newInstance
             AddProductBottomSheet.newInstance(uri).show(supportFragmentManager, "AddProductWithUriTag")
         }
 
@@ -84,7 +83,8 @@ class MainActivity : AppCompatActivity() {
         adapter = ProductAdapter(
             onFavoriteClick = { p -> productViewModel.update(p.copy(isFavorite = !p.isFavorite)) },
             onItemClick = { p -> ProductDetailBottomSheet.newInstance(p).show(supportFragmentManager, "Detail") },
-            onDeleteLongPress = { deleteProductWithConfirmation(it) }
+            onDeleteLongPress = { deleteProductWithConfirmation(it) },
+            onBrowseClick = { product -> openProductInBrowser(product) } // MODIFIED: Added onBrowseClick
         )
         binding.recyclerProducts.layoutManager = LinearLayoutManager(this)
         binding.recyclerProducts.adapter = adapter
@@ -94,10 +94,11 @@ class MainActivity : AppCompatActivity() {
         productViewModel.allProducts.observe(this) { products ->
             allProducts = products
             refreshList()
-            scheduleAllProductNotifications()
-            productViewModel.archiveExpiredProducts()
+            scheduleAllProductNotifications() // Consider if this needs to run on every product list update
+            productViewModel.archiveExpiredProducts() // Also consider the frequency of this call
         }
     }
+
     fun editProduct(product: Product) {
         val intent = Intent(this, ManualEntryActivity::class.java).apply {
             putExtra("product", product)
@@ -106,6 +107,21 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun openProductInBrowser(product: Product) {
+        try {
+            var query = "${product.name} ${product.brand ?: ""}"
+            if (product.weight != null) {
+                query += " ${product.weight}${product.weightUnit}"
+            }
+            query = query.trim() // Trim after adding all parts
+            val searchQuery = Uri.encode(query)
+            val searchUrl = "https://www.google.com/search?q=$searchQuery"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl))
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No browser available to open link", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun setupListeners() {
         binding.btnAddProduct.setOnClickListener { showAddProductOptions() }
@@ -127,11 +143,11 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val filtered = if (!newText.isNullOrBlank()) {
-                    val query = newText.lowercase(Locale.getDefault())
+                    val queryText = newText.lowercase(Locale.getDefault())
                     allProducts.filter { product ->
-                        product.name.lowercase(Locale.getDefault()).contains(query) ||
-                        (product.brand?.lowercase(Locale.getDefault())?.contains(query) ?: false) ||
-                        (product.barcode?.lowercase(Locale.getDefault())?.contains(query) ?: false)
+                        product.name.lowercase(Locale.getDefault()).contains(queryText) ||
+                        (product.brand?.lowercase(Locale.getDefault())?.contains(queryText) ?: false) ||
+                        (product.barcode?.lowercase(Locale.getDefault())?.contains(queryText) ?: false)
                     }
                 } else allProducts
                 updateList(filtered, fromSearch = !newText.isNullOrBlank())
@@ -163,8 +179,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAddProductOptions() {
-        // This is the primary way to show the AddProductBottomSheet for general use.
-        // The pickImageLauncher in MainActivity is a specific case for when an image is ALREADY chosen by MainActivity itself.
         AddProductBottomSheet.newInstance().show(supportFragmentManager, "AddProductGeneralTag")
     }
 
@@ -208,10 +222,10 @@ class MainActivity : AppCompatActivity() {
             SortMode.ALPHA_AZ -> list.sortedBy { it.name.lowercase(Locale.getDefault()) }
             SortMode.ALPHA_ZA -> list.sortedByDescending { it.name.lowercase(Locale.getDefault()) }
             SortMode.EXPIRY_ASC -> list.sortedBy { it.expirationDate ?: Long.MAX_VALUE }
-            SortMode.EXPIRY_DESC -> list.sortedByDescending { it.expirationDate ?: 0L }
+            SortMode.EXPIRY_DESC -> list.sortedByDescending { it.expirationDate ?: 0L } // Using 0L for nulls to be at the end
             SortMode.QTY_ASC -> list.sortedBy { it.quantity }
             SortMode.QTY_DESC -> list.sortedByDescending { it.quantity }
-            SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite }
+            SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite } // true comes before false
             SortMode.ADDED_ASC -> list.sortedBy { it.dateAdded }
             SortMode.ADDED_DESC -> list.sortedByDescending { it.dateAdded }
         }
@@ -221,16 +235,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateList(products: List<Product>, fromSearch: Boolean = false) {
-        if (allProducts.isEmpty()) {
+        if (allProducts.isEmpty() && !fromSearch) { // Only show initial empty state if not searching
             binding.recyclerProducts.visibility = View.GONE
             binding.emptyStateContainer.visibility = View.VISIBLE
-            binding.emptyStateTitle.text = "Scan Your First Product"
-            binding.emptyStateSubtitle.text = "To get started, scan a food item or enter the details manually."
+            binding.emptyStateImage.setImageResource(R.drawable.ic_carton_scan)
+            binding.emptyStateTitle.text = getString(R.string.empty_state_title_no_products)
+            binding.emptyStateSubtitle.text = getString(R.string.empty_state_subtitle_no_products)
         } else if (products.isEmpty()) {
             binding.recyclerProducts.visibility = View.GONE
             binding.emptyStateContainer.visibility = View.VISIBLE
-            binding.emptyStateTitle.text = if (showFavoritesOnly) "No Favorites Yet" else "No Results Found"
-            binding.emptyStateSubtitle.text = ""
+            binding.emptyStateImage.setImageResource(if (showFavoritesOnly) R.drawable.ic_heart_unfilled else R.drawable.ic_search_unfilled)
+            binding.emptyStateTitle.text = if (showFavoritesOnly) getString(R.string.empty_state_title_no_favorites) else getString(R.string.empty_state_title_no_results)
+            binding.emptyStateSubtitle.text = if (showFavoritesOnly) getString(R.string.empty_state_subtitle_no_favorites) else getString(R.string.empty_state_subtitle_no_results)
         } else {
             binding.recyclerProducts.visibility = View.VISIBLE
             binding.emptyStateContainer.visibility = View.GONE
@@ -260,60 +276,46 @@ class MainActivity : AppCompatActivity() {
 
     private fun openSearch() {
         binding.searchView.visibility = View.VISIBLE
-        binding.searchView.isIconified = false
+        binding.searchView.isIconified = false // Expand the search view
         binding.searchView.requestFocus()
     }
 
     private fun closeSearchCompletely() {
-        binding.searchView.setQuery("", false)
-        binding.searchView.clearFocus()
-        binding.searchView.visibility = View.GONE
-        refreshList()
+        binding.searchView.setQuery("", false) // Clear the query
+        binding.searchView.clearFocus() // Remove focus
+        binding.searchView.visibility = View.GONE // Hide the search view
+        refreshList() // Refresh the list to show all items
     }
 
     private fun highlightBottomNav(tab: BottomTab) {
         binding.navHome.setImageResource(if (tab == BottomTab.HOME) R.drawable.ic_home_filled else R.drawable.ic_home_unfilled)
-        binding.navHistory.setImageResource(if (tab == BottomTab.HISTORY) R.drawable.ic_clock_filled else R.drawable.ic_clock_unfilled) // Corrected based on your provided XML resource names
-        binding.navSettings.setImageResource(if (tab == BottomTab.SETTINGS) R.drawable.ic_settings_filled else R.drawable.ic_settings_unfilled) // Corrected
-        binding.navCart.setImageResource(R.drawable.ic_cart)
+        binding.navHistory.setImageResource(if (tab == BottomTab.HISTORY) R.drawable.ic_clock_filled else R.drawable.ic_clock_unfilled)
+        binding.navSettings.setImageResource(if (tab == BottomTab.SETTINGS) R.drawable.ic_settings_filled else R.drawable.ic_settings_unfilled)
+        binding.navCart.setImageResource(R.drawable.ic_cart) // Assuming navCart always uses ic_cart
     }
 
     private fun scheduleAllProductNotifications() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
             lifecycleScope.launch {
-                // Assuming your ProductViewModel has a way to get all products,
-                // for example, through a LiveData or a suspend function.
-                // Adjust this line based on how your ViewModel exposes the product list.
-                val products = productViewModel.allProducts.value // Or some other way to get the list
-                products?.let {
-                    // Now, you need to decide what to do with these products.
-                    // For example, if you have a NotificationScheduler class:
-                    // NotificationScheduler.scheduleNotificationsForProducts(this@MainActivity, it)
-                    // Or if scheduleNotificationsForProducts is a global/extension function:
-                    // scheduleNotificationsForProducts(this@MainActivity, it)
-
-                    // For now, let's assume you want to iterate and schedule for each
-                    it.forEach { product ->
-                        NotificationScheduler.scheduleForProduct(this@MainActivity, product)
-                    }
+                val products = productViewModel.allProducts.value
+                products?.forEach {
+                    NotificationScheduler.scheduleForProduct(this@MainActivity, it)
                 }
             }
         }
     }
-
 
     private fun checkAndMaybeRequestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else {
-                scheduleAllProductNotifications() // Already granted
+                scheduleAllProductNotifications()
             }
         } else {
-            scheduleAllProductNotifications() // No runtime permission needed for older Android versions
+            scheduleAllProductNotifications()
         }
     }
 
-    // Enum for Bottom Navigation Tabs (assuming you have this or similar)
     enum class BottomTab { HOME, CART, HISTORY, SETTINGS }
 }

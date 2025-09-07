@@ -98,9 +98,6 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
             hostActivity?.editProduct(p)
             dismiss()
         }
-        binding.btnOpenInBrowser.setOnClickListener {
-            openProductInBrowser(p.name)
-        }
     }
 
     override fun onDestroyView() {
@@ -116,18 +113,6 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
     private fun formatDateTime(millis: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
-    }
-
-    private fun openProductInBrowser(productName: String) {
-        try {
-            val searchQuery = Uri.encode(productName)
-            val searchUrl = "https://www.google.com/search?q=$searchQuery"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl))
-            startActivity(intent)
-        } catch (e: Exception) {
-            // Handle case where no browser is available
-            android.widget.Toast.makeText(requireContext(), "No browser available", android.widget.Toast.LENGTH_SHORT).show()
-        }
     }
 
     companion object {

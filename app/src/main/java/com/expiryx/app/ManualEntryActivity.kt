@@ -70,8 +70,8 @@ class ManualEntryActivity : AppCompatActivity() {
         binding.editTextBrand.filters = arrayOf(safeTextFilter, InputFilter.LengthFilter(50))
         // Quantity: Max 4 digits (1-9999). Numerical check in saveProduct().
         binding.editTextQuantity.filters = arrayOf(InputFilter.LengthFilter(4))
-        // Weight: Max 4 digits (e.g., up to 9999g). Numerical check in saveProduct().
-        binding.editTextWeight.filters = arrayOf(InputFilter.LengthFilter(4))
+        // Weight: Max 5 digits (e.g., up to 99999g). Numerical check in saveProduct().
+        binding.editTextWeight.filters = arrayOf(InputFilter.LengthFilter(5))
     }
 
     private fun setupWeightUnitSpinner() {
@@ -192,8 +192,8 @@ class ManualEntryActivity : AppCompatActivity() {
         val parsedWeight = weightString.toIntOrNull()
         val finalWeight: Int? // Store as Int?, anticipating Product.weight change
         if (weightString.isNotBlank()) { // Only validate if not blank
-            if (parsedWeight == null || parsedWeight <= 0 || parsedWeight > 9999) {
-                binding.editTextWeight.error = "Weight must be a number between 1 and 9999, or empty"
+            if (parsedWeight == null || parsedWeight <= 0 || parsedWeight > 99999) { //MODIFIED HERE
+                binding.editTextWeight.error = "Weight must be a number between 1 and 99999, or empty" //MODIFIED HERE
                 return
             }
             finalWeight = parsedWeight

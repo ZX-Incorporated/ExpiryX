@@ -122,16 +122,6 @@
                 android:textAllCaps="false" />
 
             <Button
-                android:id="@+id/btnOpenInBrowser"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Open in Browser"
-                android:textAllCaps="false"
-                android:backgroundTint="@color/teal_200"
-                android:textColor="@android:color/white" />
-
-            <Button
                 android:id="@+id/btnMarkAsUsed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

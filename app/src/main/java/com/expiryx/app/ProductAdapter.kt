@@ -1,17 +1,22 @@
 package com.expiryx.app
 
-import android.net.Uri
+import android.content.Intent // Added
+import android.net.Uri // Added
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast // Added for error handling
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import kotlin.math.floor
 
 sealed class ProductListItem {
@@ -22,7 +27,8 @@ sealed class ProductListItem {
 class ProductAdapter(
     private val onFavoriteClick: (Product) -> Unit,
     private val onItemClick: (Product) -> Unit,
-    private val onDeleteLongPress: (Product) -> Unit
+    private val onDeleteLongPress: (Product) -> Unit,
+    private val onBrowseClick: (Product) -> Unit // Added
 ) : ListAdapter<ProductListItem, RecyclerView.ViewHolder>(ProductListDiffCallback()) {
 
     companion object {
@@ -40,8 +46,10 @@ class ProductAdapter(
         val imageProduct: ImageView = view.findViewById(R.id.imageProduct)
         val textProductName: TextView = view.findViewById(R.id.textProductName)
         val textProductBrand: TextView = view.findViewById(R.id.textProductBrand)
+        val textProductExpiry: TextView = view.findViewById(R.id.textProductExpiry) // Added
         val textProductQuantity: TextView = view.findViewById(R.id.textProductQuantity)
         val btnFavorite: ImageButton = view.findViewById(R.id.btnFavorite)
+        val btnOpenInBrowser: ImageButton = view.findViewById(R.id.btnOpenInBrowser) // Added
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -72,7 +80,7 @@ class ProductAdapter(
                 val h = holder as ProductViewHolder
                 val product = item.product
 
-                h.textProductName.text = product.name                
+                h.textProductName.text = product.name
 
                 val brandText = product.brand?.takeIf { it.isNotBlank() }
                 if (!brandText.isNullOrBlank()) {
@@ -82,9 +90,20 @@ class ProductAdapter(
                     h.textProductBrand.visibility = View.GONE
                 }
 
+                if (product.expirationDate != null) {
+                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    h.textProductExpiry.text = "Expires: ${sdf.format(Date(product.expirationDate))}"
+                } else {
+                    h.textProductExpiry.text = "Expires: N/A"
+                }
+                h.textProductExpiry.visibility = View.VISIBLE // Always show this field
+
                 h.textProductQuantity.text = "Qty: ${product.quantity}"
                 h.btnFavorite.setImageResource(if (product.isFavorite) R.drawable.ic_fav_filled else R.drawable.ic_fav_unfilled)
                 h.btnFavorite.setOnClickListener { onFavoriteClick(product) }
+
+                // Set up browser button
+                h.btnOpenInBrowser.setOnClickListener { onBrowseClick(product) } // Added
 
                 Glide.with(h.itemView.context)
                     .load(if (product.imageUri.isNullOrBlank()) R.drawable.ic_placeholder else Uri.parse(product.imageUri))

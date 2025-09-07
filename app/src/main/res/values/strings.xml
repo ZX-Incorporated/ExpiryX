@@ -15,4 +15,12 @@
     <string name="modified_label">Modified:</string>
     <string name="no_barcode">No barcode available</string>
     <string name="never_modified">Never modified</string>
+
+    <!-- Empty State Titles and Subtitles -->
+    <string name="empty_state_title_no_products">No Products Here Yet!</string>
+    <string name="empty_state_subtitle_no_products">Tap the + button to add your first product.</string>
+    <string name="empty_state_title_no_favorites">No Favorites Found</string>
+    <string name="empty_state_subtitle_no_favorites">Mark some products as favorite to see them here.</string>
+    <string name="empty_state_title_no_results">No Results Found</string>
+    <string name="empty_state_subtitle_no_results">Try adjusting your search or filter criteria.</string>
 </resources>
