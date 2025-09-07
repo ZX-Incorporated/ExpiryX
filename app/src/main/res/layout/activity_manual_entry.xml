@@ -41,6 +41,18 @@
             android:src="@drawable/ic_placeholder"
             android:contentDescription="Product image preview" />
 
+        <!-- Barcode Display (Read-only) -->
+        <TextView
+            android:id="@+id/textViewBarcodeValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:text="@string/no_barcode"
+            android:textSize="14sp"
+            android:textColor="@android:color/darker_gray"
+            android:visibility="gone" />
+
         <!-- Product Name -->
         <EditText
             android:id="@+id/editTextProductName"

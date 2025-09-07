@@ -30,17 +30,19 @@ class ProductRepository(
                 expirationDate = product.expirationDate,
                 quantity = product.quantity,
                 weight = product.weight,
-                brand = product.brand, // Updated to use 'brand'
+                brand = product.brand,
                 imageUri = product.imageUri,
                 isFavorite = product.isFavorite,
                 action = "Deleted",
-                timestamp = System.currentTimeMillis()
+                timestamp = System.currentTimeMillis(),
+                barcode = product.barcode, 
+                dateAdded = product.dateAdded, 
+                dateModified = product.dateModified 
             )
         )
     }
 
     suspend fun markAsUsed(product: Product) {
-        // Always archive into history
         historyDao.insert(
             History(
                 productId = product.id,
@@ -48,14 +50,16 @@ class ProductRepository(
                 expirationDate = product.expirationDate,
                 quantity = product.quantity,
                 weight = product.weight,
-                brand = product.brand, // Updated to use 'brand'
+                brand = product.brand,
                 imageUri = product.imageUri,
                 isFavorite = product.isFavorite,
                 action = "Used",
-                timestamp = System.currentTimeMillis()
+                timestamp = System.currentTimeMillis(),
+                barcode = product.barcode, 
+                dateAdded = product.dateAdded, 
+                dateModified = product.dateModified 
             )
         )
-        // Remove from active list
         productDao.delete(product)
     }
 
@@ -64,7 +68,7 @@ class ProductRepository(
         val all = productDao.getAllProductsNow()
         for (p in all) {
             val expiry = p.expirationDate ?: continue
-            if (now - expiry >= 7 * 24 * 60 * 60 * 1000) {
+            if (now - expiry >= 7 * 24 * 60 * 60 * 1000) { 
                 historyDao.insert(
                     History(
                         productId = p.id,
@@ -72,11 +76,14 @@ class ProductRepository(
                         expirationDate = p.expirationDate,
                         quantity = p.quantity,
                         weight = p.weight,
-                        brand = p.brand, // Updated to use 'brand'
+                        brand = p.brand,
                         imageUri = p.imageUri,
                         isFavorite = p.isFavorite,
                         action = "Expired",
-                        timestamp = now
+                        timestamp = now,
+                        barcode = p.barcode, 
+                        dateAdded = p.dateAdded, 
+                        dateModified = p.dateModified 
                     )
                 )
                 productDao.delete(p)
@@ -96,14 +103,17 @@ class ProductRepository(
 
     suspend fun restoreFromHistory(history: History, asUsed: Boolean) {
         val product = Product(
-            id = 0,
+            id = 0, 
             name = history.productName,
             expirationDate = history.expirationDate,
             quantity = history.quantity,
             weight = history.weight,
-            brand = history.brand, // Updated to use 'brand'
+            brand = history.brand,
             imageUri = history.imageUri,
-            isFavorite = history.isFavorite
+            isFavorite = history.isFavorite,
+            barcode = history.barcode, 
+            dateAdded = history.dateAdded, 
+            dateModified = System.currentTimeMillis() // This action is a modification
         )
         productDao.insert(product)
         historyDao.deleteById(history.id)
@@ -111,14 +121,17 @@ class ProductRepository(
 
     suspend fun restoreWithNewExpiry(history: History, newExpiry: Long) {
         val product = Product(
-            id = 0,
+            id = 0, 
             name = history.productName,
             expirationDate = newExpiry,
             quantity = history.quantity,
             weight = history.weight,
-            brand = history.brand, // Updated to use 'brand'
+            brand = history.brand,
             imageUri = history.imageUri,
-            isFavorite = history.isFavorite
+            isFavorite = history.isFavorite,
+            barcode = history.barcode, 
+            dateAdded = history.dateAdded, 
+            dateModified = System.currentTimeMillis() // This action is a modification
         )
         productDao.insert(product)
         historyDao.deleteById(history.id)

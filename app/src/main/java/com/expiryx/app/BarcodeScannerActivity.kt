@@ -192,7 +192,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             brand = brand,
                             weight = weight,
                             imageUri = imageUrl,
-                            isFavorite = false
+                            isFavorite = false,
+                            barcode = barcode, // Store the scanned barcode
+                            dateAdded = System.currentTimeMillis(),
+                            dateModified = null
                         )
 
                         withContext(Dispatchers.Main) {
@@ -202,6 +205,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             ).apply {
                                 putExtra("product", product)
                                 putExtra("isEdit", false)
+                                putExtra("barcode", barcode) // Also pass barcode separately for easy access
                             }
                             startActivity(intent)
                             finish()

@@ -18,5 +18,9 @@ data class History(
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
     val action: String, // "Expired", "Used", "Deleted"
-    val timestamp: Long
+    val timestamp: Long,
+    val barcode: String? = null,
+    val dateAdded: Long, // Should match Product's dateAdded (non-nullable generally)
+    val dateModified: Long? = null,
+    // ...
 ) : Parcelable

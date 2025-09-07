@@ -8,4 +8,11 @@
     <string name="continue_as_guest" translatable="false">Continue as guest</string>
     <string name="login_with_google" translatable="false">Login with Google</string>
     <string name="sign_up" translatable="false">Sign Up</string>
+    
+    <!-- Barcode and Timestamp Labels -->
+    <string name="barcode_label">Barcode:</string>
+    <string name="added_label">Added:</string>
+    <string name="modified_label">Modified:</string>
+    <string name="no_barcode">No barcode available</string>
+    <string name="never_modified">Never modified</string>
 </resources>

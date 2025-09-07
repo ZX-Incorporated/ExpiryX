@@ -60,6 +60,24 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
 
         binding.txtDetailReminder.text = "Reminder: ${p.reminderDays} day${if (p.reminderDays == 1) "" else "s"} before"
         binding.txtDetailReminder.visibility = if (p.reminderDays > 0) View.VISIBLE else View.GONE
+
+        // --- Barcode display ---
+        if (!p.barcode.isNullOrBlank()) {
+            binding.txtDetailBarcode.text = "${getString(R.string.barcode_label)} ${p.barcode}"
+            binding.txtDetailBarcode.visibility = View.VISIBLE
+        } else {
+            binding.txtDetailBarcode.visibility = View.GONE
+        }
+
+        // --- Timestamps ---
+        binding.txtDetailDateAdded.text = "${getString(R.string.added_label)} ${formatDateTime(p.dateAdded)}"
+        
+        if (p.dateModified != null) {
+            binding.txtDetailDateModified.text = "${getString(R.string.modified_label)} ${formatDateTime(p.dateModified)}"
+            binding.txtDetailDateModified.visibility = View.VISIBLE
+        } else {
+            binding.txtDetailDateModified.visibility = View.GONE
+        }
     }
 
     private fun setupListeners(p: Product) {
@@ -85,6 +103,11 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
 
     private fun formatDate(millis: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return sdf.format(Date(millis))
+    }
+
+    private fun formatDateTime(millis: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
     }
 

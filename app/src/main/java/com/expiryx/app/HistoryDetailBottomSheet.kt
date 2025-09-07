@@ -21,9 +21,19 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
     private lateinit var history: History
     private lateinit var viewModel: HistoryViewModel
 
+    // Date formatting helpers (mirrored from ProductDetailBottomSheet)
+    private fun formatDate(millis: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return sdf.format(Date(millis))
+    }
+
+    private fun formatDateTime(millis: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        return sdf.format(Date(millis))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ✅ FIX: Correctly gets viewModel from the activity
         viewModel = (requireActivity() as HistoryActivity).viewModel
         arguments?.let {
             history = it.getParcelable("history")!!
@@ -41,53 +51,75 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        populateUI(history)
+        setupListeners(history)
+    }
 
-        // --- Basic info ---
-        binding.textHistoryName.text = history.productName
-        // ✅ FIX: This now references a valid binding property.
-        // Ensure your XML layout has a TextView with android:id="@+id/textHistoryBrand"
-        binding.textHistoryBrand.text = history.brand.takeIf { !it.isNullOrBlank() } ?: "No brand"
-        binding.textHistoryQuantity.text = "Quantity: ${history.quantity}"
-        // ... (the rest of the file is correct)
-        binding.textHistoryWeight.text = "Weight: ${history.weight.takeIf { !it.isNullOrBlank() } ?: "-"}"
-        binding.textHistoryFavourite.text = "Favourite: ${if (history.isFavorite) "Yes" else "No"}"
-
-
-        history.expirationDate?.let {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            binding.textHistoryExpiry.text = "Expiry: ${sdf.format(Date(it))}"
-        } ?: run {
-            binding.textHistoryExpiry.text = "No expiry date"
-        }
-
+    private fun populateUI(h: History) {
+        // Image
         Glide.with(requireContext())
-            .load(history.imageUri)
+            .load(h.imageUri)
             .placeholder(R.drawable.ic_placeholder)
+            .error(R.drawable.ic_placeholder) // Ensure an error placeholder is also set
             .into(binding.imageHistoryDetail)
 
-        // --- Actions based on type ---
+        // Core fields
+        binding.textHistoryName.text = h.productName
+        binding.textHistoryBrand.text = h.brand.takeIf { !it.isNullOrBlank() } ?: "No brand"
+        binding.textHistoryBrand.visibility = if (h.brand.isNullOrBlank()) View.GONE else View.VISIBLE
+
+        binding.textHistoryExpiry.text = "Expiry: ${h.expirationDate?.let { formatDate(it) } ?: "N/A"}"
+        binding.textHistoryQuantity.text = "Quantity: ${h.quantity}"
+        binding.textHistoryWeight.text = "Weight: ${h.weight.takeIf { !it.isNullOrBlank() } ?: "-"}"
+        binding.textHistoryWeight.visibility = if (h.weight.isNullOrBlank()) View.GONE else View.VISIBLE
+        binding.textHistoryFavourite.text = "Favourite: ${if (h.isFavorite) "Yes" else "No"}"
+
+        // Barcode display
+        if (!h.barcode.isNullOrBlank()) {
+            // Assuming R.string.barcode_label exists, e.g., "Barcode:"
+            binding.txtHistoryBarcode.text = "${getString(R.string.barcode_label)} ${h.barcode}" 
+            binding.txtHistoryBarcode.visibility = View.VISIBLE
+        } else {
+            binding.txtHistoryBarcode.visibility = View.GONE
+        }
+
+        // Timestamps
+        // Assuming R.string.added_label exists, e.g., "Added:"
+        binding.txtHistoryDateAdded.text = "${getString(R.string.added_label)} ${formatDateTime(h.dateAdded)}"
+        
+        if (h.dateModified != null) {
+            // Assuming R.string.modified_label exists, e.g., "Modified:"
+            binding.txtHistoryDateModified.text = "${getString(R.string.modified_label)} ${formatDateTime(h.dateModified)}"
+            binding.txtHistoryDateModified.visibility = View.VISIBLE
+        } else {
+            binding.txtHistoryDateModified.visibility = View.GONE
+        }
+    }
+
+    private fun setupListeners(history: History) {
+        // Actions based on type
         when (history.action) {
             "Deleted" -> {
                 binding.btnPrimary.text = "Restore"
                 binding.btnPrimary.setOnClickListener {
-                    viewModel.restoreDeleted(history)
+                    viewModel.restoreDeleted(history) // This will create a Product with updated dateModified
                     dismiss()
                 }
             }
             "Used" -> {
-                binding.btnPrimary.text = "Un-use" // More descriptive text
+                binding.btnPrimary.text = "Un-use"
                 binding.btnPrimary.setOnClickListener {
-                    viewModel.unuse(history)
+                    viewModel.unuse(history) // This will create a Product with updated dateModified
                     dismiss()
                 }
             }
             "Expired" -> {
                 binding.btnPrimary.text = "Change Expiry & Restore"
-                binding.btnPrimary.setOnClickListener { showDatePicker() }
+                binding.btnPrimary.setOnClickListener { showDatePicker(history) } // Pass history to showDatePicker
             }
         }
 
-        // --- Permanent delete with confirmation ---
+        // Permanent delete
         binding.btnSecondary.text = "Permanently Delete"
         binding.btnSecondary.setOnClickListener {
             AlertDialog.Builder(requireContext())
@@ -102,15 +134,15 @@ class HistoryDetailBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private fun showDatePicker() {
+    private fun showDatePicker(historyForRestore: History) { // Accept History object
         val cal = Calendar.getInstance()
         DatePickerDialog(
             requireContext(),
             { _, y, m, d ->
-                val newDate = Calendar.getInstance().apply {
-                    set(y, m, d, 0, 0, 0)
-                }.timeInMillis
-                viewModel.changeExpiry(history, newDate)
+                val calendar = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59); set(Calendar.MILLISECOND, 999) }
+                val newExpiryMillis = calendar.timeInMillis
+                // Pass the original history item to be restored with a new expiry
+                viewModel.changeExpiry(historyForRestore, newExpiryMillis) 
                 Toast.makeText(requireContext(), "Expiry updated & restored", Toast.LENGTH_SHORT).show()
                 dismiss()
             },

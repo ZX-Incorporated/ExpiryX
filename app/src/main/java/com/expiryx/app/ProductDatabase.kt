@@ -22,8 +22,7 @@ abstract class ProductDatabase : RoomDatabase() {
                     ProductDatabase::class.java,
                     "product_database"
                 )
-                    // Note: Destructive migration is fine for dev, but for a production app,
-                    // you would implement proper migrations.
+                    .addMigrations(Migrations.MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

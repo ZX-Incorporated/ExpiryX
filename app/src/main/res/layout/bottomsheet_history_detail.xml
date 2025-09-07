@@ -81,6 +81,38 @@
                 android:textSize="16sp"
                 android:layout_marginTop="2dp" />
 
+            <!-- Barcode Display -->
+            <TextView
+                android:id="@+id/txtHistoryBarcode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Barcode: N/A" 
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone" />
+
+            <!-- Date Added -->
+            <TextView
+                android:id="@+id/txtHistoryDateAdded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Added: N/A"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray" />
+
+            <!-- Date Modified -->
+            <TextView
+                android:id="@+id/txtHistoryDateModified"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Modified: N/A"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone" />
+
             <!-- Action buttons -->
             <Button
                 android:id="@+id/btnPrimary"

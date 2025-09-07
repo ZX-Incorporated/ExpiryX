@@ -154,17 +154,21 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                         name = name,
                         expirationDate = null,
                         quantity = 1,
-                        reminderDays = 0,
+                        reminderDays = 7, // Default reminder period
                         brand = prod.optString("brands", "").takeIf { it.isNotBlank() },
                         weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
                         imageUri = apiImage ?: uploadedImage.toString(),
-                        isFavorite = false
+                        isFavorite = false,
+                        barcode = barcode, // Store the extracted barcode
+                        dateAdded = System.currentTimeMillis(),
+                        dateModified = null
                     )
 
                     showLoading(false)
                     startActivity(Intent(requireContext(), ManualEntryActivity::class.java).apply {
                         putExtra("product", product)
                         putExtra("isEdit", false)
+                        putExtra("barcode", barcode) // Also pass barcode separately
                     })
                     dismissAllowingStateLoss()
                 } else {

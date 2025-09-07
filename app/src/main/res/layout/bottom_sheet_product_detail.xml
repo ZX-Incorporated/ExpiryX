@@ -81,6 +81,38 @@
                 android:text="Reminder: 3 days before"
                 android:textSize="16sp" />
 
+            <!-- Barcode Display (Read-only) -->
+            <TextView
+                android:id="@+id/txtDetailBarcode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/no_barcode"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone" />
+
+            <!-- Date Added -->
+            <TextView
+                android:id="@+id/txtDetailDateAdded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Added: 01/01/2024 12:00"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray" />
+
+            <!-- Date Modified -->
+            <TextView
+                android:id="@+id/txtDetailDateModified"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Modified: 01/01/2024 12:00"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/btnEdit"
                 android:layout_width="match_parent"

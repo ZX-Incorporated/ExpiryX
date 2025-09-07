@@ -15,7 +15,8 @@ import com.expiryx.app.databinding.ActivityManualEntryBinding
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.regex.Pattern
+import android.view.View
+import java.util.regex.* // Import all classes from java.util.regex
 
 class ManualEntryActivity : AppCompatActivity() {
 
@@ -30,6 +31,7 @@ class ManualEntryActivity : AppCompatActivity() {
     private var editingProduct: Product? = null
     private var expiryMillis: Long? = null
     private var selectedImageUri: String? = null
+    private var productBarcode: String? = null
 
     // Regex filter for safe text input
     private val safeTextFilter = InputFilter { source, _, _, _, _, _ ->
@@ -77,6 +79,7 @@ class ManualEntryActivity : AppCompatActivity() {
         }
 
         selectedImageUri = intent.getStringExtra("imageUri") ?: editingProduct?.imageUri
+        productBarcode = intent.getStringExtra("barcode") ?: editingProduct?.barcode
 
         editingProduct?.let { product ->
             binding.editTextProductName.setText(product.name)
@@ -89,6 +92,14 @@ class ManualEntryActivity : AppCompatActivity() {
             binding.editTextReminder.setText(product.reminderDays.toString())
             binding.editTextWeight.setText(product.weight)
             binding.checkboxFavorite.isChecked = product.isFavorite
+        }
+
+        // Display barcode if available
+        if (!productBarcode.isNullOrBlank()) {
+            binding.textViewBarcodeValue.text = getString(R.string.barcode_label) + " " + productBarcode
+            binding.textViewBarcodeValue.visibility = View.VISIBLE
+        } else {
+            binding.textViewBarcodeValue.visibility = View.GONE
         }
 
         if (!selectedImageUri.isNullOrBlank()) {
@@ -150,6 +161,9 @@ class ManualEntryActivity : AppCompatActivity() {
         val reminder = binding.editTextReminder.text.toString().toIntOrNull()?.coerceAtLeast(0) ?: 7
         val weight = binding.editTextWeight.text.toString().trim().takeIf { it.isNotBlank() }
 
+        val currentTime = System.currentTimeMillis()
+        val isEditing = editingProduct != null && editingProduct!!.id != 0
+        
         val product = Product(
             id = editingProduct?.id ?: 0,
             name = name,
@@ -159,7 +173,10 @@ class ManualEntryActivity : AppCompatActivity() {
             reminderDays = reminder,
             weight = weight,
             imageUri = selectedImageUri,
-            isFavorite = binding.checkboxFavorite.isChecked
+            isFavorite = binding.checkboxFavorite.isChecked,
+            barcode = productBarcode, // Preserve barcode from scan/upload
+            dateAdded = editingProduct?.dateAdded ?: currentTime, // Keep original dateAdded if editing
+            dateModified = if (isEditing) currentTime else null // Set dateModified only when updating
         )
 
         val currentEditingProduct = editingProduct

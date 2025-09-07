@@ -127,9 +127,11 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val filtered = if (!newText.isNullOrBlank()) {
-                    allProducts.filter {
-                        it.name.contains(newText, ignoreCase = true) ||
-                                (it.brand?.contains(newText, ignoreCase = true) ?: false)
+                    val query = newText.lowercase(Locale.getDefault())
+                    allProducts.filter { product ->
+                        product.name.lowercase(Locale.getDefault()).contains(query) ||
+                        (product.brand?.lowercase(Locale.getDefault())?.contains(query) ?: false) ||
+                        (product.barcode?.lowercase(Locale.getDefault())?.contains(query) ?: false)
                     }
                 } else allProducts
                 updateList(filtered, fromSearch = !newText.isNullOrBlank())
@@ -210,8 +212,8 @@ class MainActivity : AppCompatActivity() {
             SortMode.QTY_ASC -> list.sortedBy { it.quantity }
             SortMode.QTY_DESC -> list.sortedByDescending { it.quantity }
             SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite }
-            SortMode.ADDED_ASC -> list.sortedBy { it.id }
-            SortMode.ADDED_DESC -> list.sortedByDescending { it.id }
+            SortMode.ADDED_ASC -> list.sortedBy { it.dateAdded }
+            SortMode.ADDED_DESC -> list.sortedByDescending { it.dateAdded }
         }
 
         val isSearching = !binding.searchView.query.isNullOrEmpty()
