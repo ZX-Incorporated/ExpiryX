@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         ALPHA_AZ, ALPHA_ZA,
         ADDED_ASC, ADDED_DESC,
         QTY_ASC, QTY_DESC,
+        WEIGHT_ASC, WEIGHT_DESC,
         FAVORITES_FIRST
     }
 
@@ -191,9 +192,11 @@ class MainActivity : AppCompatActivity() {
             add(0, 4, 0, "Name Z–A")
             add(0, 5, 0, "Quantity Low→High")
             add(0, 6, 0, "Quantity High→Low")
-            add(0, 7, 0, "Favorites First")
-            add(0, 8, 0, "Added: Oldest First")
-            add(0, 9, 0, "Added: Newest First")
+            add(0, 7, 0, "Weight Low→High")
+            add(0, 8, 0, "Weight High→Low")
+            add(0, 9, 0, "Favorites First")
+            add(0, 10, 0, "Added: Oldest First")
+            add(0, 11, 0, "Added: Newest First")
         }
         popup.setOnMenuItemClickListener { item ->
             sortMode = when (item.itemId) {
@@ -203,9 +206,11 @@ class MainActivity : AppCompatActivity() {
                 4 -> SortMode.ALPHA_ZA
                 5 -> SortMode.QTY_ASC
                 6 -> SortMode.QTY_DESC
-                7 -> SortMode.FAVORITES_FIRST
-                8 -> SortMode.ADDED_ASC
-                9 -> SortMode.ADDED_DESC
+                7 -> SortMode.WEIGHT_ASC
+                8 -> SortMode.WEIGHT_DESC
+                9 -> SortMode.FAVORITES_FIRST
+                10 -> SortMode.ADDED_ASC
+                11 -> SortMode.ADDED_DESC
                 else -> SortMode.EXPIRY_ASC
             }
             refreshList()
@@ -225,6 +230,8 @@ class MainActivity : AppCompatActivity() {
             SortMode.EXPIRY_DESC -> list.sortedByDescending { it.expirationDate ?: 0L } // Using 0L for nulls to be at the end
             SortMode.QTY_ASC -> list.sortedBy { it.quantity }
             SortMode.QTY_DESC -> list.sortedByDescending { it.quantity }
+            SortMode.WEIGHT_ASC -> list.sortedBy { it.weight ?: Int.MAX_VALUE }
+            SortMode.WEIGHT_DESC -> list.sortedByDescending { it.weight ?: 0 }
             SortMode.FAVORITES_FIRST -> list.sortedByDescending { it.isFavorite } // true comes before false
             SortMode.ADDED_ASC -> list.sortedBy { it.dateAdded }
             SortMode.ADDED_DESC -> list.sortedByDescending { it.dateAdded }

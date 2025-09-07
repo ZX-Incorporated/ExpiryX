@@ -70,8 +70,10 @@ class ManualEntryActivity : AppCompatActivity() {
         binding.editTextBrand.filters = arrayOf(safeTextFilter, InputFilter.LengthFilter(50))
         // Quantity: Max 4 digits (1-9999). Numerical check in saveProduct().
         binding.editTextQuantity.filters = arrayOf(InputFilter.LengthFilter(4))
-        // Weight: Max 5 digits (e.g., up to 99999g). Numerical check in saveProduct().
+        // Weight: Max 5 digits (1–99999). Numerical check in saveProduct().
         binding.editTextWeight.filters = arrayOf(InputFilter.LengthFilter(5))
+        // Reminder: Max 3 digits (1–365). Numerical check in saveProduct().
+        binding.editTextReminder.filters = arrayOf(InputFilter.LengthFilter(3))
     }
 
     private fun setupWeightUnitSpinner() {
@@ -108,10 +110,9 @@ class ManualEntryActivity : AppCompatActivity() {
             }
             binding.editTextQuantity.setText(product.quantity.toString())
             binding.editTextReminder.setText(product.reminderDays.toString())
-            // Assuming product.weight will be Int? later
-            binding.editTextWeight.setText(product.weight?.toString() ?: "") 
+            binding.editTextWeight.setText(product.weight?.toString() ?: "")
             binding.checkboxFavorite.isChecked = product.isFavorite
-            
+
             // Set weight unit spinner
             val weightUnitPosition = if (product.weightUnit == "ml") 1 else 0
             binding.spinnerWeightUnit.setSelection(weightUnitPosition)
@@ -154,7 +155,10 @@ class ManualEntryActivity : AppCompatActivity() {
         DatePickerDialog(
             this,
             { _, y, m, d ->
-                val calendar = Calendar.getInstance().apply { set(y, m, d, 23, 59, 59); set(Calendar.MILLISECOND, 999) }
+                val calendar = Calendar.getInstance().apply {
+                    set(y, m, d, 23, 59, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
                 expiryMillis = calendar.timeInMillis
                 binding.editTextExpirationDate.setText(dateFormat.format(calendar.time))
             },
@@ -186,33 +190,40 @@ class ManualEntryActivity : AppCompatActivity() {
             return
         }
 
-        val reminder = binding.editTextReminder.text.toString().toIntOrNull()?.coerceAtLeast(0) ?: 7
+        // Reminder validation (1–365)
+        val reminderString = binding.editTextReminder.text.toString()
+        val reminder = reminderString.toIntOrNull()
+        if (reminder == null || reminder < 1 || reminder > 365) {
+            binding.editTextReminder.error = "Reminder must be between 1 and 365 days"
+            return
+        }
 
+        // Weight validation (optional, 1–99999)
         val weightString = binding.editTextWeight.text.toString()
         val parsedWeight = weightString.toIntOrNull()
-        val finalWeight: Int? // Store as Int?, anticipating Product.weight change
-        if (weightString.isNotBlank()) { // Only validate if not blank
-            if (parsedWeight == null || parsedWeight <= 0 || parsedWeight > 99999) { //MODIFIED HERE
-                binding.editTextWeight.error = "Weight must be a number between 1 and 99999, or empty" //MODIFIED HERE
+        val finalWeight: Int?
+        if (weightString.isNotBlank()) {
+            if (parsedWeight == null || parsedWeight < 1 || parsedWeight > 99999) {
+                binding.editTextWeight.error = "Weight must be between 1 and 99999"
                 return
             }
             finalWeight = parsedWeight
         } else {
-            finalWeight = null // Weight is optional
+            finalWeight = null // Optional
         }
 
         val currentTime = System.currentTimeMillis()
         val isEditing = editingProduct != null && editingProduct!!.id != 0
-        
+
         val product = Product(
             id = editingProduct?.id ?: 0,
             name = name,
             brand = brand,
             expirationDate = finalExpiryMillis,
-            quantity = qtyInt, // Use validated qtyInt
+            quantity = qtyInt,
             reminderDays = reminder,
-            weight = finalWeight, // Use validated finalWeight (Int?)
-            weightUnit = selectedWeightUnit, // Use selected weight unit
+            weight = finalWeight,
+            weightUnit = selectedWeightUnit,
             imageUri = selectedImageUri,
             isFavorite = binding.checkboxFavorite.isChecked,
             barcode = productBarcode,
@@ -233,3 +244,4 @@ class ManualEntryActivity : AppCompatActivity() {
         finish()
     }
 }
+

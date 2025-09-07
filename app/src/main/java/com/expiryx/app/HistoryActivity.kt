@@ -155,9 +155,11 @@ class HistoryActivity : AppCompatActivity() {
                     R.id.sort_name_desc -> 4
                     R.id.sort_quantity_asc -> 5
                     R.id.sort_quantity_desc -> 6
-                    R.id.sort_expiry_soon -> 7
-                    R.id.sort_expiry_late -> 8
-                    R.id.sort_favourites -> 9
+                    R.id.sort_weight_asc -> 7
+                    R.id.sort_weight_desc -> 8
+                    R.id.sort_expiry_soon -> 9
+                    R.id.sort_expiry_late -> 10
+                    R.id.sort_favourites -> 11
                     else -> 0
                 }
                 sortText.text = item.title
@@ -282,9 +284,11 @@ class HistoryActivity : AppCompatActivity() {
             4 -> filtered.sortedByDescending { it.productName.lowercase(Locale.getDefault()) } // Name Z-A
             5 -> filtered.sortedBy { it.quantity } // Quantity low-high
             6 -> filtered.sortedByDescending { it.quantity } // Quantity high-low
-            7 -> filtered.sortedBy { it.expirationDate ?: Long.MAX_VALUE } // Expiry soonest
-            8 -> filtered.sortedByDescending { it.expirationDate ?: Long.MIN_VALUE } // Expiry latest
-            9 -> filtered.sortedWith(compareByDescending<History> { it.isFavorite }.thenByDescending { it.timestamp }) // Favourites first
+            7 -> filtered.sortedBy { it.weight ?: Int.MAX_VALUE } // Weight low-high
+            8 -> filtered.sortedByDescending { it.weight ?: 0 } // Weight high-low
+            9 -> filtered.sortedBy { it.expirationDate ?: Long.MAX_VALUE } // Expiry soonest
+            10 -> filtered.sortedByDescending { it.expirationDate ?: Long.MIN_VALUE } // Expiry latest
+            11 -> filtered.sortedWith(compareByDescending<History> { it.isFavorite }.thenByDescending { it.timestamp }) // Favourites first
             else -> filtered.sortedByDescending { it.timestamp } // Default case
         }
 

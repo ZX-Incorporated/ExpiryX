@@ -126,7 +126,7 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
             .callTimeout(15, TimeUnit.SECONDS)
             .build()
         val request = Request.Builder()
-            .url("https://world.openfoodfacts.org/api/v0/product/$barcode.json")
+            .url("https://world.openfoodfacts.org/api/v2/product/$barcode.json")
             .build()
 
         viewLifecycleOwner.lifecycleScope.launch {

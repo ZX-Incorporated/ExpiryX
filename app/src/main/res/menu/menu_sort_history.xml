@@ -30,6 +30,14 @@
         android:title="Quantity (high → low)" />
 
     <item
+        android:id="@+id/sort_weight_asc"
+        android:title="Weight (low → high)" />
+
+    <item
+        android:id="@+id/sort_weight_desc"
+        android:title="Weight (high → low)" />
+
+    <item
         android:id="@+id/sort_expiry_soon"
         android:title="Expiry soonest" />
 
