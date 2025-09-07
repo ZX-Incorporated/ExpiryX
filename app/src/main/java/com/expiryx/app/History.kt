@@ -13,7 +13,8 @@ data class History(
     val productName: String,
     val expirationDate: Long?,
     val quantity: Int = 1,
-    val weight: String? = null,
+    val weight: Int? = null, // Changed from String? to Int?
+    val weightUnit: String = "g", // "g" for grams or "ml" for milliliters
     val brand: String? = null,
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
@@ -21,6 +22,5 @@ data class History(
     val timestamp: Long,
     val barcode: String? = null,
     val dateAdded: Long, // Should match Product's dateAdded (non-nullable generally)
-    val dateModified: Long? = null,
-    // ...
+    val dateModified: Long? = null
 ) : Parcelable

@@ -264,7 +264,7 @@ class HistoryActivity : AppCompatActivity() {
                 val nameMatch = h.productName.contains(qLower, ignoreCase = true)
                 val actionMatch = h.action.contains(qLower, ignoreCase = true)
                 val brandMatch = h.brand?.contains(qLower, ignoreCase = true) ?: false
-                val weightMatch = h.weight?.contains(qLower, ignoreCase = true) ?: false
+                val weightMatch = h.weight?.toString()?.contains(qLower, ignoreCase = true) ?: false
                 val quantityMatch = h.quantity.toString().contains(qLower)
                 val expiryMatch = h.expirationDate?.let { formatDate(it).contains(qLower) } ?: false
                 val timestampMatch = formatDateTime(h.timestamp).contains(qLower)

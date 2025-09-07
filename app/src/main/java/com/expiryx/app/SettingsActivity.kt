@@ -91,27 +91,23 @@ class SettingsActivity : AppCompatActivity() {
 
             val csvContent = buildString {
                 appendLine("=== Products ===")
-                // ✅ FIX: Changed header from Notes to Brand
                 appendLine("ID,Name,Expiry,Quantity,Weight,Brand,Favorite,ImageUri")
                 for (p in products) {
                     appendLine(
                         "${p.id},\"${escape(p.name)}\",${p.expirationDate ?: ""},${p.quantity}," +
-                                // ✅ FIX: Changed p.notes to p.brand
-                                "\"${escape(p.weight)}\",\"${escape(p.brand)}\",${p.isFavorite}," +
+                                "\"${escape(p.weight?.toString())}\",\"${escape(p.brand)}\",${p.isFavorite}," +
                                 "\"${escape(p.imageUri)}\""
                     )
                 }
 
                 appendLine()
                 appendLine("=== History ===")
-                // ✅ FIX: Changed header from Notes to Brand
                 appendLine("ID,ProductID,Name,Expiry,Quantity,Weight,Brand,Favorite,ImageUri,Action,Timestamp")
                 for (h in history) {
                     appendLine(
                         "${h.id},${h.productId ?: ""},\"${escape(h.productName)}\"," +
                                 "${h.expirationDate ?: ""},${h.quantity}," +
-                                // ✅ FIX: Changed h.notes to h.brand
-                                "\"${escape(h.weight)}\",\"${escape(h.brand)}\",${h.isFavorite}," +
+                                "\"${escape(h.weight?.toString())}\",\"${escape(h.brand)}\",${h.isFavorite}," +
                                 "\"${escape(h.imageUri)}\",${escape(h.action)},${h.timestamp}"
                     )
                 }

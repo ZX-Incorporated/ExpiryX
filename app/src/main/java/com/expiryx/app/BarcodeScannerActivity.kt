@@ -178,11 +178,17 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         val productJson = json.getJSONObject("product")
                         val name = productJson.optString("product_name", "").trim()
 
-                        // ✅ FIX: Changed 'notes' to 'brand'
                         val brand = productJson.optString("brands", "").takeIf { it.isNotBlank() }
-                        val weight = productJson.optString("quantity", "").takeIf { it.isNotBlank() }
+                        val weightString = productJson.optString("quantity", "")
                         val imageUrl = productJson.optString("image_url", null)
 
+                        // Determine weight unit from API response
+                        val weightUnit = when {
+                            weightString.contains("ml", ignoreCase = true) -> "ml"
+                            weightString.contains("g", ignoreCase = true) -> "g"
+                            else -> "g" // Default to grams
+                        }
+                        
                         val product = Product(
                             id = 0,
                             name = name,
@@ -190,7 +196,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             quantity = 1,
                             reminderDays = 7, // Default reminder period
                             brand = brand,
-                            weight = weight,
+                            weight = weightString.substringBefore(" ").trim().toIntOrNull(),
+                            weightUnit = weightUnit,
                             imageUri = imageUrl,
                             isFavorite = false,
                             barcode = barcode, // Store the scanned barcode

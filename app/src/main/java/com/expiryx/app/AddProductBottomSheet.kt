@@ -149,6 +149,14 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                     val name = prod.optString("product_name", "").trim()
                     val apiImage = prod.optString("image_url", null)
 
+                    // Determine weight unit from API response
+                    val weightString = prod.optString("quantity", "")
+                    val weightUnit = when {
+                        weightString.contains("ml", ignoreCase = true) -> "ml"
+                        weightString.contains("g", ignoreCase = true) -> "g"
+                        else -> "g" // Default to grams
+                    }
+                    
                     val product = Product(
                         id = 0,
                         name = name,
@@ -156,7 +164,8 @@ class AddProductBottomSheet : BottomSheetDialogFragment() {
                         quantity = 1,
                         reminderDays = 7, // Default reminder period
                         brand = prod.optString("brands", "").takeIf { it.isNotBlank() },
-                        weight = prod.optString("quantity", "").takeIf { it.isNotBlank() },
+                        weight = weightString.substringBefore(" ").trim().toIntOrNull(),
+                        weightUnit = weightUnit,
                         imageUri = apiImage ?: uploadedImage.toString(),
                         isFavorite = false,
                         barcode = barcode, // Store the extracted barcode

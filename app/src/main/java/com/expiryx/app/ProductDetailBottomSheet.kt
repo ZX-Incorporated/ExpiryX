@@ -1,5 +1,6 @@
 package com.expiryx.app
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -50,13 +51,16 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
         binding.txtDetailBrand.text = p.brand
         binding.txtDetailBrand.visibility = if (p.brand.isNullOrBlank()) View.GONE else View.VISIBLE
 
-
         binding.txtDetailExpiry.text = "Expires on: ${p.expirationDate?.let { formatDate(it) } ?: "N/A"}"
         binding.txtDetailQuantity.text = "Quantity: ${p.quantity}"
 
         // --- Optional fields ---
-        binding.txtDetailWeight.text = "Weight: ${p.weight}"
-        binding.txtDetailWeight.visibility = if (p.weight.isNullOrBlank()) View.GONE else View.VISIBLE
+        if (p.weight != null) {
+            binding.txtDetailWeight.text = "Weight: ${p.weight} ${p.weightUnit}"
+            binding.txtDetailWeight.visibility = View.VISIBLE
+        } else {
+            binding.txtDetailWeight.visibility = View.GONE
+        }
 
         binding.txtDetailReminder.text = "Reminder: ${p.reminderDays} day${if (p.reminderDays == 1) "" else "s"} before"
         binding.txtDetailReminder.visibility = if (p.reminderDays > 0) View.VISIBLE else View.GONE
@@ -94,6 +98,9 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
             hostActivity?.editProduct(p)
             dismiss()
         }
+        binding.btnOpenInBrowser.setOnClickListener {
+            openProductInBrowser(p.name)
+        }
     }
 
     override fun onDestroyView() {
@@ -109,6 +116,18 @@ class ProductDetailBottomSheet : BottomSheetDialogFragment() {
     private fun formatDateTime(millis: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
+    }
+
+    private fun openProductInBrowser(productName: String) {
+        try {
+            val searchQuery = Uri.encode(productName)
+            val searchUrl = "https://www.google.com/search?q=$searchQuery"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl))
+            startActivity(intent)
+        } catch (e: Exception) {
+            // Handle case where no browser is available
+            android.widget.Toast.makeText(requireContext(), "No browser available", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     companion object {
