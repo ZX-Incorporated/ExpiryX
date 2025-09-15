@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shadow -->
+    <item android:top="4dp" android:left="4dp">
+        <shape android:shape="oval">
+            <solid android:color="#20000000" />
+        </shape>
+    </item>
+    <!-- Logo background -->
+    <item android:bottom="4dp" android:right="4dp">
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorSurface" />
+        </shape>
+    </item>
+</layer-list>
