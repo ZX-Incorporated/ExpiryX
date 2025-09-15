@@ -99,7 +99,7 @@
             android:gravity="center"
             android:padding="14dp"
             android:layout_marginTop="8dp"
-            android:textColor="@android:color/holo_red_dark"/>
+            android:textColor="?attr/colorError"/>
     </LinearLayout>
 
     <!-- Progress overlay -->

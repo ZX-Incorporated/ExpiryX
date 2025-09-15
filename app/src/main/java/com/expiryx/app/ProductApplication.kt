@@ -7,4 +7,10 @@ class ProductApplication : Application() {
     val repository: ProductRepository by lazy {
         ProductRepository(database.productDao(), database.historyDao())
     }
+    
+    override fun onCreate() {
+        super.onCreate()
+        // Initialize theme based on user preference or system default
+        ThemeManager.initializeTheme(this)
+    }
 }

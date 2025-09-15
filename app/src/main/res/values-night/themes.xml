@@ -1,16 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Dark system, but app stays light -->
-    <style name="Theme.ExpiryX" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">@color/teal_700</item>
-        <item name="colorOnPrimary">@android:color/white</item>
+    <!-- Dark theme -->
+    <style name="Theme.ExpiryX" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/teal_200</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/dark_on_surface</item>
+        <item name="colorBackground">@color/dark_background</item>
+        <item name="colorOnBackground">@color/dark_on_background</item>
+        <item name="colorSurfaceVariant">@color/dark_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/dark_on_surface_variant</item>
 
-        <!-- Force light look -->
+        <!-- System bars for dark mode -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+
+        <!-- Insets -->
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 
     <style name="Theme.ExpiryX.Camera" parent="Theme.Material3.DayNight.NoActionBar">

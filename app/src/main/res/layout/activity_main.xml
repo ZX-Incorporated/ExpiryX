@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorBackground"
     android:fitsSystemWindows="true">
 
     <!-- Top bar -->
@@ -24,13 +24,14 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_sort"
-            android:contentDescription="Sort By" />
+            android:contentDescription="Sort By"
+            android:tint="?attr/colorOnSurface" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sort By"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnBackground"
             android:textSize="15sp"
             android:layout_marginStart="6dp" />
 
@@ -45,14 +46,16 @@
             android:layout_height="28dp"
             android:src="@drawable/ic_heart_unfilled"
             android:contentDescription="Favorites"
-            android:layout_marginEnd="16dp" />
+            android:layout_marginEnd="16dp"
+            android:tint="?attr/colorOnSurface" />
 
         <ImageView
             android:id="@+id/btnSearch"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_search_unfilled"
-            android:contentDescription="Search" />
+            android:contentDescription="Search"
+            android:tint="?attr/colorOnSurface" />
     </LinearLayout>
 
     <!-- Search bar -->
@@ -105,7 +108,7 @@
             android:text="Scan Your First Product"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black" />
+            android:textColor="?attr/colorOnBackground" />
 
         <TextView
             android:id="@+id/emptyStateSubtitle"
@@ -114,7 +117,7 @@
             android:text="To get started, scan a food item or enter the details manually."
             android:textAlignment="center"
             android:textSize="14sp"
-            android:textColor="#777777"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:layout_marginTop="4dp"/>
     </LinearLayout>
 
@@ -148,13 +151,13 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="vertical"
-        android:background="@color/white"
+        android:background="?attr/colorBackground"
         android:elevation="6dp">
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray"/>
+            android:background="?attr/colorOutline"/>
 
         <LinearLayout
             android:id="@+id/bottomNav"
@@ -180,14 +183,15 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_home_unfilled"
-                    android:contentDescription="Home" />
+                    android:contentDescription="Home"
+                    android:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Home"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <!-- Store -->
@@ -204,14 +208,15 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_cart"
-                    android:contentDescription="Store" />
+                    android:contentDescription="Store"
+                    android:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Store"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <!-- History -->
@@ -228,14 +233,15 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_clock_unfilled"
-                    android:contentDescription="History" />
+                    android:contentDescription="History"
+                    android:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="History"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <!-- Settings -->
@@ -252,14 +258,15 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_settings_unfilled"
-                    android:contentDescription="Settings" />
+                    android:contentDescription="Settings"
+                    android:tint="?attr/colorOnSurface" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Settings"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

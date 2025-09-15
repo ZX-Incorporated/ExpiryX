@@ -26,6 +26,9 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.appVersionText.text = "v${getString(R.string.app_version_name)}"
 
+        // Setup dark mode toggle
+        setupDarkModeToggle()
+
         binding.notificationsCard.setOnClickListener {
             startActivity(Intent(this, NotificationSettingsActivity::class.java))
             overridePendingTransition(0, 0)
@@ -69,6 +72,21 @@ class SettingsActivity : AppCompatActivity() {
         }
         binding.navSettingsWrapper.setOnClickListener {
             // Already here
+        }
+    }
+
+    private fun setupDarkModeToggle() {
+        // Set initial state based on current theme
+        val isDarkMode = ThemeManager.isDarkMode(this)
+        binding.darkModeSwitch.isChecked = isDarkMode
+        
+        // Handle toggle changes
+        binding.darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val themeMode = if (isChecked) ThemeManager.THEME_DARK else ThemeManager.THEME_LIGHT
+            ThemeManager.setThemeMode(this, themeMode)
+            
+            // Restart activity to apply theme changes
+            recreate()
         }
     }
 

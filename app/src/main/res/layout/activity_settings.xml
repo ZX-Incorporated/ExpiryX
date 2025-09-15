@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorBackground"
     android:fitsSystemWindows="true">
 
     <!-- Top bar -->
@@ -26,7 +26,7 @@
             android:text="Settings"
             android:textStyle="bold"
             android:textSize="18sp"
-            android:textColor="@android:color/black"/>
+            android:textColor="?attr/colorOnBackground"/>
     </LinearLayout>
 
     <!-- Scrollable settings content -->
@@ -56,7 +56,7 @@
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -71,7 +71,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_notifications"
-                            app:tint="@android:color/black"/>
+                            app:tint="?attr/colorOnSurface"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -91,7 +91,7 @@
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -106,7 +106,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_dark_mode"
-                            app:tint="@android:color/black"/>
+                            app:tint="?attr/colorOnSurface"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -139,7 +139,7 @@
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -154,7 +154,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_export"
-                            app:tint="@android:color/black"/>
+                            app:tint="?attr/colorOnSurface"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -174,7 +174,7 @@
                 style="@style/SettingsCard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="6dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -189,7 +189,7 @@
                         <ImageView
                             style="@style/SettingsIcon"
                             android:src="@drawable/ic_delete"
-                            app:tint="@android:color/black"/>
+                            app:tint="?attr/colorOnSurface"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -293,7 +293,7 @@
                 android:padding="8dp"
                 android:text="Version 1.0"
                 android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"/>
+                android:textColor="?attr/colorOnSurfaceVariant"/>
         </LinearLayout>
     </ScrollView>
 
@@ -304,13 +304,13 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="vertical"
-        android:background="@color/white"
+        android:background="?attr/colorBackground"
         android:elevation="6dp">
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@android:color/darker_gray"/>
+            android:background="?attr/colorOutline"/>
 
         <LinearLayout
             android:id="@+id/bottomNav"
@@ -335,7 +335,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_home_unfilled"
-                    app:tint="@android:color/black"
+                    app:tint="?attr/colorOnSurface"
                     android:contentDescription="Home"/>
 
                 <TextView
@@ -343,7 +343,7 @@
                     android:layout_height="wrap_content"
                     android:text="Home"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <LinearLayout
@@ -359,7 +359,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_cart"
-                    app:tint="@android:color/black"
+                    app:tint="?attr/colorOnSurface"
                     android:contentDescription="Store"/>
 
                 <TextView
@@ -367,7 +367,7 @@
                     android:layout_height="wrap_content"
                     android:text="Store"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <LinearLayout
@@ -383,7 +383,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_clock_unfilled"
-                    app:tint="@android:color/black"
+                    app:tint="?attr/colorOnSurface"
                     android:contentDescription="History"/>
 
                 <TextView
@@ -391,7 +391,7 @@
                     android:layout_height="wrap_content"
                     android:text="History"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
 
             <LinearLayout
@@ -407,7 +407,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_settings_unfilled"
-                    app:tint="@android:color/black"
+                    app:tint="?attr/colorOnSurface"
                     android:contentDescription="Settings"/>
 
                 <TextView
@@ -415,7 +415,7 @@
                     android:layout_height="wrap_content"
                     android:text="Settings"
                     android:textSize="12sp"
-                    android:textColor="@android:color/black"/>
+                    android:textColor="?attr/colorOnBackground"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

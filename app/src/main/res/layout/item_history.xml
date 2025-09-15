@@ -23,7 +23,7 @@
             android:text="Product Name"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="@android:color/black" />
+            android:textColor="?attr/colorOnSurface" />
 
         <TextView
             android:id="@+id/textHistoryAction"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:text="Expired"
             android:textSize="14sp"
-            android:textColor="#555555" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <TextView
             android:id="@+id/textHistoryDate"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:text="01/09/2025 14:30"
             android:textSize="12sp"
-            android:textColor="@android:color/darker_gray" />
+            android:textColor="?attr/colorOnSurfaceVariant" />
     </LinearLayout>
 
     <!-- Product image (right side) -->
